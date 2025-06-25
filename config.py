@@ -15,12 +15,14 @@ from scripts.menus import (
     wifi_menu,
 )
 from scripts.screen import decrease_brightness, increase_brightness
+from scripts.recorder import take_screenshot
 from top_bar import top_bar
-from scripts.utils import shift_group
+from scripts.utils import cycle_keyboard_layout, shift_group
 
-mod = "mod4"
-alt = "mod1"
 terminal = "alacritty"
+
+meta = "mod4"
+alt = "mod1"
 
 
 @hook.subscribe.startup_once
@@ -29,10 +31,11 @@ def on_startup():
 
 
 keys = [
-    Key([mod, alt], "Left", lazy.screen.prev_group(), desc="Move to previous group"),
-    Key([mod, alt], "h", lazy.screen.prev_group(), desc="Move to previous group"),
-    Key([mod, alt], "Right", lazy.screen.next_group(), desc="Move to next group"),
-    Key([mod, alt], "l", lazy.screen.next_group(), desc="Move to next group"),
+    Key([], "Print", take_screenshot),
+    Key([meta, alt], "Left", lazy.screen.prev_group(), desc="Move to previous group"),
+    Key([meta, alt], "h", lazy.screen.prev_group(), desc="Move to previous group"),
+    Key([meta, alt], "Right", lazy.screen.next_group(), desc="Move to next group"),
+    Key([meta, alt], "l", lazy.screen.next_group(), desc="Move to next group"),
     Key(
         [alt, "shift"],
         "h",
@@ -61,53 +64,55 @@ keys = [
         lazy.screen.next_group(),
         desc="Move window to next group",
     ),
-    Key([mod], "h", lazy.layout.left(), desc="Move focus to left"),
-    Key([mod], "l", lazy.layout.right(), desc="Move focus to right"),
-    Key([mod], "j", lazy.layout.down(), desc="Move focus down"),
-    Key([mod], "k", lazy.layout.up(), desc="Move focus up"),
-    Key([mod], "Return", lazy.layout.next(), desc="Move window focus to other window"),
+    Key([meta], "h", lazy.layout.left(), desc="Move focus to left"),
+    Key([meta], "l", lazy.layout.right(), desc="Move focus to right"),
+    Key([meta], "j", lazy.layout.down(), desc="Move focus down"),
+    Key([meta], "k", lazy.layout.up(), desc="Move focus up"),
+    Key([meta], "Return", lazy.layout.next(), desc="Move window focus to other window"),
     Key(
-        [mod, "shift"], "h", lazy.layout.shuffle_left(), desc="Move window to the left"
+        [meta, "shift"], "h", lazy.layout.shuffle_left(), desc="Move window to the left"
     ),
     Key(
-        [mod, "shift"],
+        [meta, "shift"],
         "l",
         lazy.layout.shuffle_right(),
         desc="Move window to the right",
     ),
-    Key([mod, "shift"], "j", lazy.layout.shuffle_down(), desc="Move window down"),
-    Key([mod, "shift"], "k", lazy.layout.shuffle_up(), desc="Move window up"),
-    Key([mod], "m", lazy.layout.grow()),
-    Key([mod], "s", lazy.layout.shrink()),
-    Key([mod], "u", lazy.layout.reset()),
-    Key([mod, "shift"], "n", lazy.layout.normalize()),
-    Key([mod], "o", lazy.layout.maximize()),
-    Key([mod], "t", lazy.spawn(terminal), desc="Launch terminal"),
-    Key([mod], "d", lazy.next_layout(), desc="Toggle between layouts"),
-    Key([mod], "Tab", lazy.next_screen()),
-    Key([mod], "q", lazy.window.kill(), desc="Kill focused window"),
-    Key([mod], "Escape", power_menu, desc="power menu"),
+    Key([meta, "shift"], "j", lazy.layout.shuffle_down(), desc="Move window down"),
+    Key([meta, "shift"], "k", lazy.layout.shuffle_up(), desc="Move window up"),
+    Key([meta], "m", lazy.layout.grow()),
+    Key([meta], "s", lazy.layout.shrink()),
+    Key([meta], "u", lazy.layout.reset()),
+    Key([meta, "shift"], "n", lazy.layout.normalize()),
+    Key([meta], "o", lazy.layout.maximize()),
+    Key([meta], "t", lazy.spawn(terminal), desc="Launch terminal"),
+    Key([meta], "d", lazy.next_layout(), desc="Toggle between layouts"),
+    Key([meta], "Tab", lazy.next_screen()),
+    Key([meta], "q", lazy.window.kill(), desc="Kill focused window"),
+    Key([meta], "Escape", power_menu, desc="power menu"),
     Key(
-        [mod],
+        [meta],
         "z",
         lazy.window.toggle_fullscreen(),
         desc="Toggle fullscreen on focused window",
     ),
     Key(
-        [mod],
+        [meta],
         "f",
         lazy.window.toggle_floating(),
         desc="Toggle floating on focused window",
     ),
-    Key([mod], "Tab", lazy.group.next_window(), desc="Cycle through windows"),
-    Key([mod], "Tab", lazy.group.next_window(), desc="Cycle backwards through windows"),
-    Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
-    Key([mod], "space", lazy.spawn("rofi -show drun"), desc="Spawn rofi apps"),
-    Key([mod], "w", lazy.spawn("rofi -show window"), desc="Spawn rofi"),
-    Key([mod], "n", wifi_menu, desc="Spawn rofi WiFi menu"),
-    Key([mod], "r", recorder_menu, desc="Spawn rofi recorder menu"),
-    Key([mod], "b", bluetooth_menu, desc="Spawn rofi bluetooth menu"),
-    Key([], "XF86Keyboard", lazy.spawn("telegram-desktop")),
+    Key([meta], "Tab", lazy.group.next_window(), desc="Cycle through windows"),
+    Key(
+        [meta], "Tab", lazy.group.next_window(), desc="Cycle backwards through windows"
+    ),
+    Key([meta, "control"], "r", lazy.reload_config(), desc="Reload the config"),
+    Key([meta], "space", lazy.spawn("rofi -show drun"), desc="Spawn rofi apps"),
+    Key([meta], "w", lazy.spawn("rofi -show window"), desc="Spawn rofi"),
+    Key([meta], "n", wifi_menu, desc="Spawn rofi WiFi menu"),
+    Key([meta], "r", recorder_menu, desc="Spawn rofi recorder menu"),
+    Key([meta], "b", bluetooth_menu, desc="Spawn rofi bluetooth menu"),
+    Key([], "XF86Keyboard", cycle_keyboard_layout),
     Key([], "XF86Favorites", lazy.spawn("brave")),
     Key([], "XF86Go", lazy.spawn("rfkill unblock bluetooth")),
     Key([], "Cancel", lazy.spawn("rfkill block bluetooth")),
@@ -140,14 +145,14 @@ for i in groups:
         [
             # mod + group number = switch to group
             Key(
-                [mod],
+                [meta],
                 i.name,
                 lazy.group[i.name].toscreen(),
                 desc="Switch to group {}".format(i.name),
             ),
             # mod + shift + group number = switch to & move focused window to group
             Key(
-                [mod, "shift"],
+                [meta, "shift"],
                 i.name,
                 lazy.window.togroup(i.name, switch_group=True),
                 desc="Switch to & move focused window to group {}".format(i.name),
@@ -200,15 +205,15 @@ screens = [main_screen]
 # Drag floating layouts.
 mouse = [
     Drag(
-        [mod],
+        [meta],
         "Button1",
         lazy.window.set_position_floating(),
         start=lazy.window.get_position(),
     ),
     Drag(
-        [mod], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()
+        [meta], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()
     ),
-    Click([mod], "Button2", lazy.window.bring_to_front()),
+    Click([meta], "Button2", lazy.window.bring_to_front()),
 ]
 
 dgroups_key_binder = None
@@ -227,7 +232,10 @@ floating_layout = Floating(
         Match(wm_class="ssh-askpass"),  # ssh-askpass
         Match(title="branchdialog"),  # gitk
         Match(title="pinentry"),  # GPG key password entry
-    ]
+    ],
+    border_focus=Colours.ELECTRIC_BLUE,
+    border_normal=Colours.GOLD,
+    border_width=2,
 )
 auto_fullscreen = True
 focus_on_window_activation = "smart"

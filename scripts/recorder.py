@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+
 import subprocess
 import os
 from typing import List
 from datetime import datetime
+from libqtile.lazy import lazy
 
-# Icons for recording options
+
 system_record_icon = "󰍹  󰕾"  # Screen + system audio
 silent_record_icon = "󰍹  󰖁"  # Screen + silent
 mic_record_icon = "󰍹  󰍬"  # Screen + microphone
@@ -16,6 +18,14 @@ status_icon = "󰑊"  # Info icon
 config_dir = os.environ.get("XDG_CONFIG_HOME", "") + "/rofi"
 
 
+def send_notification(title, message, urgency="normal", icon=None):
+    cmd = ["dunstify", title, message, "-u", urgency]
+    if icon:
+        cmd.extend(["-i", icon])
+
+    subprocess.run(cmd, check=False)
+
+
 def is_recording() -> bool:
     """Check if wf-recorder or ffmpeg is currently running"""
     wf_result = subprocess.run(["pgrep", "wf-recorder"], capture_output=True)
@@ -23,7 +33,7 @@ def is_recording() -> bool:
     return wf_result.returncode == 0 or ffmpeg_result.returncode == 0
 
 
-def get_recording_status() -> str:
+def _get_recording_status() -> str:
     """Get current recording status"""
     if is_recording():
         return "Recording in progress..."
@@ -31,7 +41,7 @@ def get_recording_status() -> str:
         return "No active recording"
 
 
-def main_menu() -> str:
+def _menu() -> str:
     options: List[str] = []
 
     if is_recording():
@@ -46,7 +56,7 @@ def main_menu() -> str:
         ]
 
     menu: str = "\n".join([f"{item}" for item in options])
-    status = get_recording_status()
+    status = _get_recording_status()
 
     result = subprocess.run(
         [
@@ -90,12 +100,28 @@ def start_silent_recording():
     subprocess.Popen(["wf-recorder", "-f", output_file])
 
 
-def send_notification(title, message):
-    """Send a desktop notification using dunst"""
+@lazy.function
+def take_screenshot(_qtile):
+    output_dir = "~/Pictures"
+    output_dir = os.path.expanduser(output_dir)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"screenshot-{timestamp}.png"
+    filepath = os.path.join(output_dir, filename)
+
     try:
-        subprocess.run(["notify-send", title, message], check=True)
-    except subprocess.CalledProcessError:
-        print(f"Failed to send notification: {title} - {message}")
+        subprocess.Popen(["grim", filepath])
+        send_notification(title="Screenshot", message=f"Saved to: {filename}")
+
+    except subprocess.CalledProcessError as e:
+        send_notification(
+            title="Screenshot Error",
+            message=f"Failed to take screenshot: {e}",
+        )
+    except FileNotFoundError:
+        send_notification(
+            title="Screenshot Error",
+            message="grim not installed",
+        )
 
 
 def start_mic_and_screen_recording():
@@ -113,8 +139,8 @@ def start_mic_and_screen_recording():
     )
 
     send_notification(
-        "Recording Started",
-        f"Screen recording with audio started\nFile: recording_{timestamp}.mp4",
+        title="Recording Started",
+        message=f"Screen recording with audio started\nFile: recording_{timestamp}.mp4",
     )
 
     return process, output_file
@@ -126,8 +152,8 @@ def start_camera_microphone_recording():
     output_file = f"{os.path.expanduser('~/Videos')}/camera_recording_{timestamp}.mp4"
 
     send_notification(
-        "Camera Recording Started",
-        f"Camera recording with audio started\nFile: camera_recording_{timestamp}.mp4",
+        title="Camera Recording Started",
+        message=f"Camera recording with audio started\nFile: camera_recording_{timestamp}.mp4",
     )
 
     process = subprocess.run(
@@ -189,8 +215,8 @@ def start_audio_only_recording():
     )
 
     send_notification(
-        "Audio Recording Started",
-        f"Audio recording started\nFile: audio_recording_{timestamp}.mp3",
+        title="Audio Recording Started",
+        message=f"Audio recording started\nFile: audio_recording_{timestamp}.mp3",
     )
 
     return process, output_file
@@ -200,6 +226,7 @@ def stop_recording():
     """Stop any active recording"""
     subprocess.run(["pkill", "wf-recorder"])
     subprocess.run(["pkill", "ffmpeg"])
+    send_notification(title="Stopped Recording", message="Recording Saved")
 
 
 def confirm() -> bool:
@@ -228,14 +255,10 @@ def confirm() -> bool:
 
 
 def screen_recorder():
-    # If recording is active, go straight to confirmation
-    if is_recording():
-        if confirm():
-            stop_recording()
-        return
+    if is_recording() and confirm():
+        return stop_recording()
 
-    # Otherwise show the main menu
-    selected = main_menu()
+    selected = _menu()
 
     if selected == system_record_icon:
         start_system_recording()

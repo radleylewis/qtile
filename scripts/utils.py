@@ -4,6 +4,43 @@ import re
 from libqtile.lazy import lazy
 
 
+def send_notification(title, message, urgency="normal", icon=None):
+    cmd = ["dunstify", title, message, "-u", urgency]
+    if icon:
+        cmd.extend(["-i", icon])
+
+    subprocess.run(cmd, check=False)
+
+
+@lazy.function
+def cycle_keyboard_layout(_qtile):
+    import subprocess
+    import os
+
+    layouts = ["us", "zh", "de"]
+    state_file = "/tmp/qtile_kb_layout_state"
+
+    # Read current state
+    current_index = 0
+    if os.path.exists(state_file):
+        with open(state_file, "r") as f:
+            current_index = int(f.read().strip())
+
+    # Cycle to next
+    next_index = (current_index + 1) % len(layouts)
+    next_layout = layouts[next_index]
+
+    # Set layout
+    subprocess.Popen(["localectl", "set-x11-keymap", next_layout])
+
+    # Save state
+    with open(state_file, "w") as f:
+        f.write(str(next_index))
+
+    # Show current layout
+    subprocess.run(["notify-send", f"Layout: {next_layout.upper()}"])
+
+
 def get_audio_output_device():
     sink = subprocess.run(
         ["pactl", "get-default-sink"], capture_output=True, text=True

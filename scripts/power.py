@@ -72,7 +72,14 @@ def confirm() -> bool:
 
 
 def lock_qtile():
-    subprocess.Popen(["swaylock", "-i", "~/Pictures/Wallpapers/austria.jpg", "--clock"])
+    subprocess.Popen(
+        [
+            "swaylock",
+            "-i",
+            "~/.config/qtile/assets/wallpapers/lock_screen.png",
+            "--clock",
+        ]
+    )
 
 
 def sleep():

@@ -5,7 +5,9 @@ from libqtile.lazy import lazy
 def get_brightness():
     """Get current brightness level using brillo"""
     try:
-        result = subprocess.run(["brillo", "-G"], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["brillo", "-G"], capture_output=True, text=True, check=True
+        )
         brightness = round(float(result.stdout.strip()))
         return brightness
     except subprocess.CalledProcessError:
@@ -19,7 +21,7 @@ def send_brightness_notification(brightness):
     elif brightness < 25:
         icon = "🔅"
     elif brightness < 50:
-        icon = "💡"
+        icon = "🔅"
     elif brightness < 75:
         icon = "🔆"
     else:

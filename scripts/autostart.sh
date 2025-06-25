@@ -3,8 +3,11 @@
 # Start dunst notification daemon
 dunst &
 
+# Start gestures
+libinput-gestures-setup start &
+
 # Lock screen command
-lockscreen="swaylock -i ~/Pictures/Wallpapers/austria.jpg --clock"
+lockscreen="swaylock -i ~/.config/qtile/assets/wallpapers/lock_screen.png --clock"
 
 # Timings
 dim_timeout=120  # 1 minute of inactivity to dim
