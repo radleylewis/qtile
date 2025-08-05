@@ -7,6 +7,12 @@ from libqtile.lazy import lazy
 
 from assets.constants import Colours, FONT_TYPE, WALLPAPER_HONG_KONG
 
+from scripts.audio import (
+    raise_volume,
+    toggle_mute_audio_output,
+    lower_volume,
+    toggle_mute_audio_input,
+)
 from scripts.menus import (
     autostart,
     bluetooth_menu,
