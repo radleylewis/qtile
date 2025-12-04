@@ -1,6 +1,7 @@
 from typing import Dict
 
-WALLPAPER_HONG_KONG = "~/.config/qtile/assets/wallpapers/hong_kong.jpg"
+# WALLPAPER_HONG_KONG = "~/.config/qtile/assets/wallpapers/hong_kong.jpg"
+WALLPAPER_HONG_KONG = "~/Pictures/background.jpeg"
 FONT_TYPE = "JetBrains Mono Bold"
 
 

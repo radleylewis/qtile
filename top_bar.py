@@ -7,18 +7,18 @@ from scripts.utils import get_audio_output_device
 top_bar = bar.Bar(
     [
         widget.Spacer(
-            length=15,
+            length=20,
             background=Colours.ELECTRIC_BLUE,
         ),
+
         widget.Image(
             filename="~/.config/qtile/assets/graphics/logo.png",
-            margin=2,
             background=Colours.ELECTRIC_BLUE,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_shadow_divider_up.svg",
             background=Colours.DARK_BLUE,
-        ),
+        ),        
         widget.GroupBox(
             fontsize=18,
             borderwidth=3,
@@ -80,11 +80,11 @@ top_bar = bar.Bar(
             length=6,
             background=Colours.VERY_DARK_BLUE,
         ),
-        widget.Wlan(
-            format="{essid} [{percent:2.0%}]",
+        widget.WlanIw(
+            format="{essid} {percent:2.0%}",
             font=FONT_TYPE,
             fontsize=13,
-            interface="wlp3s0",
+            interface="wlp2s0",
             background=Colours.VERY_DARK_BLUE,
         ),
         widget.Image(
@@ -133,6 +133,17 @@ top_bar = bar.Bar(
             filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
             background=Colours.DARK_BLUE,
         ),
+        widget.GenPollCommand(
+            cmd="asusctl profile -p | grep 'Active profile' | awk '{print $NF}'",
+            update_interval=5,
+            fmt='⚡ {}',
+            shell=True,
+            background=Colours.DARK_BLUE,
+        ),
+        widget.Image(
+            filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
+            background=Colours.DARK_BLUE,
+        ),
         widget.Image(
             margin_y=4,
             margin_x=2,
@@ -159,22 +170,6 @@ top_bar = bar.Bar(
         ),
         widget.Battery(
             battery="BAT0",
-            font=FONT_TYPE,
-            background=Colours.DARK_BLUE,
-            foreground=Colours.WHITE,
-            format="{percent:2.0%}",
-            fontsize=13,
-            low_foreground=Colours.WARNING,
-            low_percentage=0.2,
-        ),
-        widget.BatteryIcon(
-            battery="BAT1",
-            theme_path="~/.config/qtile/assets/graphics/battery_theme/",
-            background=Colours.DARK_BLUE,
-            scale=1,
-        ),
-        widget.Battery(
-            battery="BAT1",
             font=FONT_TYPE,
             background=Colours.DARK_BLUE,
             foreground=Colours.WHITE,

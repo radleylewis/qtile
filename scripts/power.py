@@ -19,7 +19,6 @@ def get_uptime() -> str:
     result = subprocess.run(["uptime", "-p"], capture_output=True, text=True)
     return result.stdout.strip().replace("up ", "")
 
-
 def main_menu() -> str:
     options: List[str] = [
         lock_icon,

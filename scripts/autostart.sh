@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# screens: managed by kanshi
+kanshi &
+
 # Start dunst notification daemon
 dunst &
 

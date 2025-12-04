@@ -4,6 +4,7 @@ from libqtile.layout.floating import Floating
 from libqtile.layout.max import Max
 from libqtile.layout.xmonad import MonadTall
 from libqtile.lazy import lazy
+from libqtile.log_utils import logger
 
 from assets.constants import Colours, FONT_TYPE, WALLPAPER_HONG_KONG
 
@@ -17,6 +18,7 @@ from scripts.menus import (
     autostart,
     bluetooth_menu,
     power_menu,
+    performance_menu,
     recorder_menu,
     wifi_menu,
 )
@@ -96,6 +98,7 @@ keys = [
     Key([meta], "Tab", lazy.next_screen()),
     Key([meta], "q", lazy.window.kill(), desc="Kill focused window"),
     Key([meta], "Escape", power_menu, desc="power menu"),
+    Key([meta], "p", performance_menu, desc="performance menu"),
     Key(
         [meta],
         "z",
@@ -206,7 +209,29 @@ main_screen = Screen(
     wallpaper_mode="stretch",
 )
 
-screens = [main_screen]
+secondary_screen = Screen(
+    wallpaper=WALLPAPER_HONG_KONG,
+    wallpaper_mode="stretch",
+)
+
+screens = [main_screen, secondary_screen]
+
+@hook.subscribe.screens_reconfigured
+def _move_groups_to_existing_screens():
+    screen_count = len(qtile.screens)
+    logger.error(f"SCREEN COUNT: {screen_count}")
+
+    # choose target screen:
+    #  - 0 when only one screen exists
+    #  - 1 when two or more screens exist
+    target_screen = 1 if screen_count > 1 else 0
+    logger.error(f"Target screen = {target_screen}")
+
+    for group in qtile.groups:
+        screen = group.screen
+        if screen is None or screen.index >= screen_count:
+            logger.error(f"Moving group {group.name} to screen {target_screen}")
+            qtile.groups_map[group.name].toscreen(target_screen)
 
 # Drag floating layouts.
 mouse = [
