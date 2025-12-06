@@ -3,6 +3,9 @@
 # screens: managed by kanshi
 kanshi &
 
+# Wallpapers per monitor
+swaybg -m fill -i "$HOME/Pictures/background.jpeg" &
+
 # Start dunst notification daemon
 dunst &
 

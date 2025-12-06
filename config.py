@@ -6,7 +6,7 @@ from libqtile.layout.xmonad import MonadTall
 from libqtile.lazy import lazy
 from libqtile.log_utils import logger
 
-from assets.constants import Colours, FONT_TYPE, WALLPAPER_HONG_KONG
+from assets.constants import Colours, FONT_TYPE 
 
 from scripts.audio import (
     raise_volume,
@@ -36,7 +36,6 @@ alt = "mod1"
 @hook.subscribe.startup_once
 def on_startup():
     autostart()
-
 
 keys = [
     Key([], "Print", take_screenshot),
@@ -133,6 +132,15 @@ keys = [
     Key([], "XF86AudioMicMute", toggle_mute_audio_input),
 ]
 
+groups = [Group(str(i)) for i in range(1, 6)]  # main screen groups
+
+for g in groups:  # exclude laptop group
+    keys.extend([
+        Key([meta], g.name, lazy.group[g.name].toscreen()),
+        Key([meta, "shift"], g.name, lazy.window.togroup(g.name))
+    ])
+
+
 # Add key bindings to switch VTs in Wayland.
 # We can't check qtile.core.name in default config as it is loaded before qtile is started
 # We therefore defer the check until the key binding is run by using .when(func=...)
@@ -144,33 +152,6 @@ for vt in range(1, 8):
             lazy.core.change_vt(vt).when(func=lambda: qtile.core.name == "wayland"),
             desc=f"Switch to VT{vt}",
         )
-    )
-
-
-groups = [Group(i) for i in "123456789"]
-
-for i in groups:
-    keys.extend(
-        [
-            # mod + group number = switch to group
-            Key(
-                [meta],
-                i.name,
-                lazy.group[i.name].toscreen(),
-                desc="Switch to group {}".format(i.name),
-            ),
-            # mod + shift + group number = switch to & move focused window to group
-            Key(
-                [meta, "shift"],
-                i.name,
-                lazy.window.togroup(i.name, switch_group=True),
-                desc="Switch to & move focused window to group {}".format(i.name),
-            ),
-            # Or, use below if you prefer not to switch to that group.
-            # # mod + shift + group number = move focused window to group
-            # Key([mod, "shift"], i.name, lazy.window.togroup(i.name),
-            #     desc="move focused window to group {}".format(i.name)),
-        ]
     )
 
 config = {
@@ -201,37 +182,19 @@ widget_defaults = dict(
     fontsize=13,
     padding=3,
 )
+
 extension_defaults = widget_defaults.copy()
 
-main_screen = Screen(
-    top=top_bar,
-    wallpaper=WALLPAPER_HONG_KONG,
-    wallpaper_mode="stretch",
-)
+def make_screens():
+    return [Screen(top=top_bar)]
 
-secondary_screen = Screen(
-    wallpaper=WALLPAPER_HONG_KONG,
-    wallpaper_mode="stretch",
-)
+screens = make_screens()
 
-screens = [main_screen, secondary_screen]
-
-@hook.subscribe.screens_reconfigured
-def _move_groups_to_existing_screens():
-    screen_count = len(qtile.screens)
-    logger.error(f"SCREEN COUNT: {screen_count}")
-
-    # choose target screen:
-    #  - 0 when only one screen exists
-    #  - 1 when two or more screens exist
-    target_screen = 1 if screen_count > 1 else 0
-    logger.error(f"Target screen = {target_screen}")
-
-    for group in qtile.groups:
-        screen = group.screen
-        if screen is None or screen.index >= screen_count:
-            logger.error(f"Moving group {group.name} to screen {target_screen}")
-            qtile.groups_map[group.name].toscreen(target_screen)
+# This hook ensures screens are reconfigured when monitors change
+@hook.subscribe.screen_change
+def on_screen_change(event):
+    logger.warning(f"Screen change detected: {event}")
+    lazy.restart()
 
 # Drag floating layouts.
 mouse = [
