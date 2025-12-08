@@ -1,276 +1,174 @@
 #!/usr/bin/env python3
 
+from utils import (
+    get_audio_input_device,
+    notify,
+    take_screenshot,
+    timestamp_file,
+)
 import subprocess
 import os
 from typing import List
-from datetime import datetime
-from libqtile.lazy import lazy
+
+ICONS = {
+    "system": "󰍹 󰕾",
+    "silent": "󰍹 󰖁",
+    "mic": "󰍹 󰍬",
+    "audio": "󰍬",
+    "stop": "󰓛",
+    "screenshot": "󰄀",
+}
+
+VIDEO_DIR = os.path.expanduser("~/Videos")
+CONFIG_DIR = os.path.expanduser("~/.config/rofi")
 
 
-system_record_icon = "󰍹  󰕾"  # Screen + system audio
-silent_record_icon = "󰍹  󰖁"  # Screen + silent
-mic_record_icon = "󰍹  󰍬"  # Screen + microphone
-camera_mic_record_icon = "󰄀  󰍬"  # Camera + microphone
-audio_only_record_icon = "󰍬"  # Microphone only
-stop_record_icon = "󰓛"  # Stop/square icon
-status_icon = "󰑊"  # Info icon
-
-config_dir = os.environ.get("XDG_CONFIG_HOME", "") + "/rofi"
+def get_cmd_for(process_name: str) -> str | None:
+    try:
+        pid = subprocess.check_output(["pgrep", "-f", process_name]).decode().strip()
+        return subprocess.check_output(["ps", "-p", pid, "-o", "cmd="]).decode().strip()
+    except Exception:
+        return None
 
 
-def send_notification(title, message, urgency="normal", icon=None):
-    cmd = ["dunstify", title, message, "-u", urgency]
-    if icon:
-        cmd.extend(["-i", icon])
+def get_recording_info():
+    wf = get_cmd_for("wf-recorder")
+    mic_name = get_audio_input_device()
 
-    subprocess.run(cmd, check=False)
+    if wf:
+        if "--audio=default" in wf:
+            audio = f"microphone ({mic_name})"
+        elif "--audio" in wf:
+            audio = "system audio"
+        else:
+            audio = "silent"
+
+        parts = wf.split()
+        outfile = parts[parts.index("-f") + 1] if "-f" in parts else "unknown"
+
+        return ("screen", audio, outfile)
+
+    ff = get_cmd_for("ffmpeg")
+    if ff:
+        rec_type = "audio-only"
+
+        audio = f"microphone ({mic_name})"
+        outfile = ff.split()[-1]
+        return (rec_type, audio, outfile)
+
+    return None
 
 
-def is_recording() -> bool:
-    """Check if wf-recorder or ffmpeg is currently running"""
-    wf_result = subprocess.run(["pgrep", "wf-recorder"], capture_output=True)
-    ffmpeg_result = subprocess.run(["pgrep", "ffmpeg"], capture_output=True)
-    return wf_result.returncode == 0 or ffmpeg_result.returncode == 0
+# ----------------------------------------------------
+# MENU
+# ----------------------------------------------------
 
 
-def _get_recording_status() -> str:
-    """Get current recording status"""
-    if is_recording():
-        return "Recording in progress..."
-    else:
-        return "No active recording"
-
-
-def _menu() -> str:
-    options: List[str] = []
-
-    if is_recording():
-        options = [stop_record_icon]
-    else:
-        options = [
-            system_record_icon,
-            silent_record_icon,
-            mic_record_icon,
-            camera_mic_record_icon,
-            audio_only_record_icon,
-        ]
-
-    menu: str = "\n".join([f"{item}" for item in options])
-    status = _get_recording_status()
-
+def menu(options: List[str], message: str) -> str:
     result = subprocess.run(
         [
             "rofi",
             "-dmenu",
             "-p",
-            "Screen Recorder",
+            "Recorder",
             "-mesg",
-            f"{status}",
+            message,
             "-theme",
-            f"{config_dir}/power.rasi",
+            f"{CONFIG_DIR}/common.rasi",
         ],
-        input=menu,
-        capture_output=True,
+        input="\n".join(options),
         text=True,
-    ).stdout.strip()
-
-    return result.split("\n")[0]
-
-
-def start_system_recording():
-    """Start recording with system audio"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"{os.path.expanduser('~/Videos')}/recording_{timestamp}.mp4"
-
-    subprocess.Popen(
-        [
-            "wf-recorder",
-            "--audio=alsa_output.pci-0000_00_1f.3.analog-stereo.monitor",
-            "-f",
-            output_file,
-        ]
+        capture_output=True,
     )
+    return result.stdout.strip()
 
 
-def start_silent_recording():
-    """Start recording without audio"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"{os.path.expanduser('~/Videos')}/recording_{timestamp}.mp4"
-
-    subprocess.Popen(["wf-recorder", "-f", output_file])
+# ----------------------------------------------------
+# FILE HELPERS
+# ----------------------------------------------------
 
 
-@lazy.function
-def take_screenshot(_qtile):
-    output_dir = "~/Pictures"
-    output_dir = os.path.expanduser(output_dir)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"screenshot-{timestamp}.png"
-    filepath = os.path.join(output_dir, filename)
-
-    try:
-        subprocess.Popen(["grim", filepath])
-        send_notification(title="Screenshot", message=f"Saved to: {filename}")
-
-    except subprocess.CalledProcessError as e:
-        send_notification(
-            title="Screenshot Error",
-            message=f"Failed to take screenshot: {e}",
-        )
-    except FileNotFoundError:
-        send_notification(
-            title="Screenshot Error",
-            message="grim not installed",
-        )
+# ----------------------------------------------------
+# RECORDING & SCREENSHOT
+# ----------------------------------------------------
 
 
-def start_mic_and_screen_recording():
-    """Start recording with the system's default/active microphone"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"{os.path.expanduser('~/Videos')}/recording_{timestamp}.mp4"
-
-    process = subprocess.Popen(
-        [
-            "wf-recorder",
-            "--audio",
-            "-f",
-            output_file,
-        ]
-    )
-
-    send_notification(
-        title="Recording Started",
-        message=f"Screen recording with audio started\nFile: recording_{timestamp}.mp4",
-    )
-
-    return process, output_file
+def start_screen_mic():
+    mic = get_audio_input_device()
+    out = timestamp_file("recording", "mp4", VIDEO_DIR)
+    subprocess.Popen(["wf-recorder", "--audio=default", "-f", out])
+    notify("Recording Started", f"Screen + microphone ({mic})\n{out}")
 
 
-def start_camera_microphone_recording():
-    """Start recording camera with the system's default/active microphone"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"{os.path.expanduser('~/Videos')}/camera_recording_{timestamp}.mp4"
-
-    send_notification(
-        title="Camera Recording Started",
-        message=f"Camera recording with audio started\nFile: camera_recording_{timestamp}.mp4",
-    )
-
-    process = subprocess.run(
-        [
-            "ffmpeg",
-            "-thread_queue_size",
-            "512",
-            "-f",
-            "v4l2",
-            "-framerate",
-            "30",  # match your camera's frame rate
-            "-i",
-            "/dev/video0",
-            "-thread_queue_size",
-            "1024",
-            "-f",
-            "pulse",
-            "-i",
-            "default",
-            "-vsync",
-            "2",  # drop or duplicate frames to maintain A/V sync
-            "-async",
-            "1",  # basic audio-video sync
-            "-c:v",
-            "libx264",
-            "-preset",
-            "veryfast",
-            "-crf",
-            "23",
-            "-c:a",
-            "aac",
-            "-b:a",
-            "128k",
-            "-pix_fmt",
-            "yuv420p",
-            output_file,
-        ]
-    )
-
-    return process, output_file
+def start_screen_system_audio():
+    out = timestamp_file("recording", "mp4", VIDEO_DIR)
+    subprocess.Popen(["wf-recorder", "--audio", "-f", out])
+    notify("Recording Started", f"Screen + system audio\n{out}")
 
 
-def start_audio_only_recording():
-    """Start recording audio only (microphone)"""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"{os.path.expanduser('~/Videos')}/audio_recording_{timestamp}.mp3"
+def start_screen_silent():
+    out = timestamp_file("recording", "mp4", VIDEO_DIR)
+    subprocess.Popen(["wf-recorder", "-f", out])
+    notify("Recording Started", f"Screen only\n{out}")
 
-    process = subprocess.Popen(
-        [
-            "ffmpeg",
-            "-f",
-            "pulse",
-            "-i",
-            "default",  # Use default pulse audio input
-            "-c:a",
-            "mp3",
-            output_file,
-        ]
-    )
 
-    send_notification(
-        title="Audio Recording Started",
-        message=f"Audio recording started\nFile: audio_recording_{timestamp}.mp3",
-    )
-
-    return process, output_file
+def start_audio_only():
+    mic = get_audio_input_device()
+    out = timestamp_file("audio", "mp3", VIDEO_DIR)
+    subprocess.Popen(["ffmpeg", "-f", "pulse", "-i", "default", "-c:a", "mp3", out])
+    notify("Audio Recording", f"Mic: {mic}\n{out}")
 
 
 def stop_recording():
-    """Stop any active recording"""
-    subprocess.run(["pkill", "wf-recorder"])
-    subprocess.run(["pkill", "ffmpeg"])
-    send_notification(title="Stopped Recording", message="Recording Saved")
+    subprocess.run(["pkill", "-f", "wf-recorder"])
+    subprocess.run(["pkill", "-f", "ffmpeg"])
+    notify("Recording Stopped", "Saved to Videos")
 
 
-def confirm() -> bool:
-    stop_icon = "󰓛"  # Stop block
-    continue_icon = "󰐊"  # Play/continue button
-    options = [stop_icon, continue_icon]
-    menu: str = "\n".join([f"{item}" for item in options])
-    result = subprocess.run(
-        [
-            "rofi",
-            "-theme",
-            f"{config_dir}/power.rasi",
-            "-theme-str",
-            "listview {columns: 2; lines: 1;}",
-            "-dmenu",
-            "-p",
-            "Recording Active",
-            "-mesg",
-            "Stop or continue recording?",
-        ],
-        input=menu,
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
-    return result == stop_icon
+# ----------------------------------------------------
+# MAIN
+# ----------------------------------------------------
 
 
-def screen_recorder():
-    if is_recording() and confirm():
-        return stop_recording()
+def main():
+    info = get_recording_info()
 
-    selected = _menu()
+    if info:
+        rec_type, audio, outfile = info
+        msg = (
+            f"<b>Active recording</b>\n"
+            f"Type: {rec_type}\n"
+            f"Audio: {audio}\n"
+            f"File: {outfile}"
+        )
+        selected = menu([ICONS["stop"]], msg)
+        if selected == ICONS["stop"]:
+            stop_recording()
+        return
 
-    if selected == system_record_icon:
-        start_system_recording()
-    elif selected == silent_record_icon:
-        start_silent_recording()
-    elif selected == mic_record_icon:
-        start_mic_and_screen_recording()
-    elif selected == camera_mic_record_icon:
-        start_camera_microphone_recording()
-    elif selected == audio_only_record_icon:
-        start_audio_only_recording()
+    # NEW ORDER (common first + screenshot)
+    options = [
+        ICONS["mic"],  # screen + mic
+        ICONS["system"],  # screen + system audio
+        ICONS["silent"],  # screen only
+        ICONS["screenshot"],  # screenshot (NEW)
+        ICONS["audio"],  # audio only
+    ]
+
+    mic_name = get_audio_input_device()
+    selected = menu(options, f"Choose mode\nMic detected: {mic_name}")
+
+    if selected == ICONS["mic"]:
+        start_screen_mic()
+    elif selected == ICONS["system"]:
+        start_screen_system_audio()
+    elif selected == ICONS["silent"]:
+        start_screen_silent()
+    elif selected == ICONS["screenshot"]:
+        take_screenshot()
+    elif selected == ICONS["audio"]:
+        start_audio_only()
 
 
 if __name__ == "__main__":
-    screen_recorder()
+    main()

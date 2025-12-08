@@ -4,5 +4,5 @@
       <feDropShadow dx="12" dy="-8" stdDeviation="2" flood-opacity="0.8"/>
     </filter>
   </defs>
-  <rect width="120" height="250" stroke-width="5" fill="#51d3d3" filter="url(#f2)" transform="rotate(30, 70, 60) translate(-35, -60)" />
+  <rect width="120" height="250" stroke-width="5" fill="#b8a4c9" filter="url(#f2)" transform="rotate(30, 70, 60) translate(-35, -60)" />
 </svg>

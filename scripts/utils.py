@@ -1,15 +1,9 @@
 import subprocess
+import os
 import re
+from datetime import datetime
 
 from libqtile.lazy import lazy
-
-
-def send_notification(title, message, urgency="normal", icon=None):
-    cmd = ["dunstify", title, message, "-u", urgency]
-    if icon:
-        cmd.extend(["-i", icon])
-
-    subprocess.run(cmd, check=False)
 
 
 @lazy.function
@@ -77,3 +71,51 @@ def shift_group(qtile, direction):
         lazy.screen.next_group()
     else:
         lazy.screen.prev_group()
+
+
+def get_audio_input_device():
+    """Return the current default audio input (microphone) using pactl."""
+    try:
+        result = subprocess.run(
+            ["pactl", "get-default-source"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        source = result.stdout.strip()
+
+        # Get human-readable description
+        desc = subprocess.run(
+            ["pactl", "list", "sources"],
+            capture_output=True,
+            text=True,
+        ).stdout
+
+        for block in desc.split("Source #"):
+            if source in block:
+                for line in block.splitlines():
+                    if "Description:" in line:
+                        return line.split("Description:")[1].strip()
+
+        return source  # fallback
+    except Exception:
+        return "No Mic"
+
+
+def notify(title: str, message: str):
+    subprocess.run(["notify-send", title, message], check=False)
+
+
+def timestamp_file(prefix: str, ext: str, folder) -> str:
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return f"{folder}/{prefix}_{ts}.{ext}"
+
+
+def take_screenshot(_qtile):
+    IMAGE_DIR = os.path.expanduser("~/Pictures/Screenshots")
+    os.makedirs(IMAGE_DIR, exist_ok=True)
+    out = timestamp_file("screenshot", "png", IMAGE_DIR)
+
+    subprocess.Popen(["grim", out])
+
+    notify("Screenshot Taken", out)

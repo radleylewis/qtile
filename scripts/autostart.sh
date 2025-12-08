@@ -7,7 +7,7 @@ kanshi &
 swaybg -m fill -i "$HOME/Pictures/background.jpeg" &
 
 # Start dunst notification daemon
-dunst &
+mako &
 
 # Start gestures
 libinput-gestures-setup start &

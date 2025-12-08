@@ -6,7 +6,7 @@ from libqtile.layout.xmonad import MonadTall
 from libqtile.lazy import lazy
 from libqtile.log_utils import logger
 
-from assets.constants import Colours, FONT_TYPE 
+from assets.constants import Colours, FONT_TYPE
 
 from scripts.audio import (
     raise_volume,
@@ -22,10 +22,9 @@ from scripts.menus import (
     recorder_menu,
     wifi_menu,
 )
-from scripts.screen import decrease_brightness, increase_brightness
-from scripts.recorder import take_screenshot
+from scripts.brightness import decrease_brightness, increase_brightness
 from top_bar import top_bar
-from scripts.utils import cycle_keyboard_layout, shift_group
+from scripts.utils import cycle_keyboard_layout, shift_group, take_screenshot
 
 terminal = "alacritty"
 
@@ -37,8 +36,9 @@ alt = "mod1"
 def on_startup():
     autostart()
 
+
 keys = [
-    Key([], "Print", take_screenshot),
+    Key([], "Print", lazy.function(take_screenshot)),
     Key([meta, alt], "Left", lazy.screen.prev_group(), desc="Move to previous group"),
     Key([meta, alt], "h", lazy.screen.prev_group(), desc="Move to previous group"),
     Key([meta, alt], "Right", lazy.screen.next_group(), desc="Move to next group"),
@@ -135,10 +135,12 @@ keys = [
 groups = [Group(str(i)) for i in range(1, 6)]  # main screen groups
 
 for g in groups:  # exclude laptop group
-    keys.extend([
-        Key([meta], g.name, lazy.group[g.name].toscreen()),
-        Key([meta, "shift"], g.name, lazy.window.togroup(g.name))
-    ])
+    keys.extend(
+        [
+            Key([meta], g.name, lazy.group[g.name].toscreen()),
+            Key([meta, "shift"], g.name, lazy.window.togroup(g.name)),
+        ]
+    )
 
 
 # Add key bindings to switch VTs in Wayland.
@@ -157,7 +159,7 @@ for vt in range(1, 8):
 config = {
     "margin": 10,
     "single_margin": 10,
-    "border_focus": Colours.ELECTRIC_BLUE,
+    "border_focus": Colours.BRIGHT_GREEN,
     "border_normal": Colours.GREY,
 }
 
@@ -185,16 +187,20 @@ widget_defaults = dict(
 
 extension_defaults = widget_defaults.copy()
 
+
 def make_screens():
     return [Screen(top=top_bar)]
 
+
 screens = make_screens()
+
 
 # This hook ensures screens are reconfigured when monitors change
 @hook.subscribe.screen_change
 def on_screen_change(event):
     logger.warning(f"Screen change detected: {event}")
     lazy.restart()
+
 
 # Drag floating layouts.
 mouse = [
@@ -227,7 +233,7 @@ floating_layout = Floating(
         Match(title="branchdialog"),  # gitk
         Match(title="pinentry"),  # GPG key password entry
     ],
-    border_focus=Colours.ELECTRIC_BLUE,
+    border_focus=Colours.HIGHLIGHT,
     border_normal=Colours.GOLD,
     border_width=2,
 )

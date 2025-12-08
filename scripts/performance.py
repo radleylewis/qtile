@@ -2,7 +2,6 @@
 
 import subprocess
 import os
-from typing import List
 
 performance_icon = "󱓞"
 balanced_icon = "󰓅"
@@ -17,11 +16,15 @@ config_dir = os.environ.get("XDG_CONFIG_HOME", "") + "/rofi"
 def get_current_profile() -> str:
     result = subprocess.run(
         [
-            "asusctl", 
-            "profile", 
-            "-p", 
-        ], capture_output=True, text=True)
+            "asusctl",
+            "profile",
+            "-p",
+        ],
+        capture_output=True,
+        text=True,
+    )
     return result.stdout.splitlines()[1].split()[-1]
+
 
 def performance_mode_menu() -> str:
     options = [
@@ -40,7 +43,7 @@ def performance_mode_menu() -> str:
             "-mesg",
             f"Current Profile: {current_profile}",
             "-theme",
-            f"{config_dir}/power.rasi",
+            f"{config_dir}/common.rasi",
             "-theme-str",
             "listview {columns: 3; lines: 1;}",
         ],
@@ -72,6 +75,7 @@ def confirm(mode: str) -> bool:
         text=True,
     ).stdout.strip()
     return result == yes_icon
+
 
 def set_performance_profile():
     selection = performance_mode_menu()
