@@ -17,14 +17,16 @@ from scripts.audio import (
 from scripts.menus import (
     autostart,
     bluetooth_menu,
-    power_menu,
     performance_menu,
+    power_menu,
     recorder_menu,
     wifi_menu,
 )
 from scripts.brightness import decrease_brightness, increase_brightness
 from top_bar import top_bar
-from scripts.utils import cycle_keyboard_layout, shift_group, take_screenshot
+from scripts.utils import shift_group, take_screenshot
+
+from scripts.performance import set_performance_profile
 
 terminal = "alacritty"
 
@@ -120,7 +122,7 @@ keys = [
     Key([meta], "n", wifi_menu, desc="Spawn rofi WiFi menu"),
     Key([meta], "r", recorder_menu, desc="Spawn rofi recorder menu"),
     Key([meta], "b", bluetooth_menu, desc="Spawn rofi bluetooth menu"),
-    Key([], "XF86Keyboard", cycle_keyboard_layout),
+    # Key([], "XF86Keyboard", cycle_keyboard_layout),
     Key([], "XF86Favorites", lazy.spawn("brave")),
     Key([], "XF86Go", lazy.spawn("rfkill unblock bluetooth")),
     Key([], "Cancel", lazy.spawn("rfkill block bluetooth")),

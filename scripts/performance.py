@@ -61,7 +61,7 @@ def confirm(mode: str) -> bool:
         [
             "rofi",
             "-theme",
-            f"{config_dir}/power.rasi",
+            f"{config_dir}/common.rasi",
             "-theme-str",
             "listview {columns: 2; lines: 1;}",
             "-dmenu",
@@ -82,6 +82,14 @@ def set_performance_profile():
     action = ["asusctl", "profile", "-P", selection]
     if confirm(selection):
         subprocess.run(action)
+        subprocess.Popen(
+            [
+                "notify-send",
+                "Performance Mode",
+                f"Set to: {selection.capitalize()}",
+                "--expire-time=1_000",
+            ]
+        )
 
 
 if __name__ == "__main__":

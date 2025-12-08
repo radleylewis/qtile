@@ -12,7 +12,6 @@ def notify(title: str, body: str, urgency: str = "normal", replaces_id: str = ""
     """Wrapper around notify-send (for mako)"""
     cmd = ["notify-send", "-u", urgency]
 
-    # Replace existing notification (mako supports this)
     if replaces_id:
         cmd.extend(["-r", replaces_id])
 

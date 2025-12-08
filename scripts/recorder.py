@@ -11,9 +11,9 @@ import os
 from typing import List
 
 ICONS = {
+    "mic": "󰍹 󰍬",
     "system": "󰍹 󰕾",
     "silent": "󰍹 󰖁",
-    "mic": "󰍹 󰍬",
     "audio": "󰍬",
     "stop": "󰓛",
     "screenshot": "󰄀",
@@ -59,11 +59,6 @@ def get_recording_info():
     return None
 
 
-# ----------------------------------------------------
-# MENU
-# ----------------------------------------------------
-
-
 def menu(options: List[str], message: str) -> str:
     result = subprocess.run(
         [
@@ -81,16 +76,6 @@ def menu(options: List[str], message: str) -> str:
         capture_output=True,
     )
     return result.stdout.strip()
-
-
-# ----------------------------------------------------
-# FILE HELPERS
-# ----------------------------------------------------
-
-
-# ----------------------------------------------------
-# RECORDING & SCREENSHOT
-# ----------------------------------------------------
 
 
 def start_screen_mic():
@@ -125,11 +110,6 @@ def stop_recording():
     notify("Recording Stopped", "Saved to Videos")
 
 
-# ----------------------------------------------------
-# MAIN
-# ----------------------------------------------------
-
-
 def main():
     info = get_recording_info()
 
@@ -146,7 +126,6 @@ def main():
             stop_recording()
         return
 
-    # NEW ORDER (common first + screenshot)
     options = [
         ICONS["mic"],  # screen + mic
         ICONS["system"],  # screen + system audio
@@ -165,7 +144,7 @@ def main():
     elif selected == ICONS["silent"]:
         start_screen_silent()
     elif selected == ICONS["screenshot"]:
-        take_screenshot()
+        take_screenshot(None)
     elif selected == ICONS["audio"]:
         start_audio_only()
 

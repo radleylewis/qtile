@@ -85,6 +85,8 @@ def mic_menu() -> str:
             "rofi",
             "-theme",
             f"{CONFIG_DIR}/rofi/common.rasi",
+            "-theme-str",
+            f"window {{width: 800px;}} listview {{columns: 1; lines: {len(options)};}}",
             "-dmenu",
             "-p",
             "Select Microphone",

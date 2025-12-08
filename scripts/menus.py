@@ -18,6 +18,12 @@ def power_menu(_qtile) -> None:
 
 
 @lazy.function
+def microphone_menu(_qtile) -> None:
+    microphone_menu = os.path.expanduser(f"{SCRIPTS_PATH}/microphone.py")
+    subprocess.Popen([microphone_menu])
+
+
+@lazy.function
 def performance_menu(_qtile) -> None:
     performance_menu = os.path.expanduser(f"{SCRIPTS_PATH}/performance.py")
     subprocess.Popen([performance_menu])
