@@ -82,13 +82,16 @@ def set_performance_profile():
     action = ["asusctl", "profile", "-P", selection]
     if confirm(selection):
         subprocess.run(action)
-        subprocess.Popen(
+        subprocess.run(
             [
                 "notify-send",
                 "Performance Mode",
                 f"Set to: {selection.capitalize()}",
-                "--expire-time=1_000",
-            ]
+                "--expire-time=2000",
+                "-u",
+                "normal",
+            ],
+            check=False,
         )
 
 

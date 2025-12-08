@@ -89,7 +89,7 @@ def notify(
 
     cmd.append(f"--expire-time={expire_time}")
 
-    subprocess.run(cmd + [title] + [message], check=False)
+    subprocess.run(cmd + [title, message], check=False)
 
 
 def timestamp_file(prefix: str, ext: str, folder) -> str:
