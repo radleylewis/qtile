@@ -1,19 +1,23 @@
 from libqtile import bar, widget
 
 from assets.constants import Colours, FONT_TYPE
-from scripts.utils import get_audio_output_device, get_audio_input_device
+from scripts.utils import get_audio_output_device
 
 
 top_bar = bar.Bar(
     [
+        widget.Spacer(
+            length=12,
+            background=Colours.HIGHLIGHT,
+        ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/logo.png",
-            background=Colours.BACKGROUND_LIGHT,
-            padding=14,
+            background=Colours.HIGHLIGHT,
+            padding=16,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_shadow_divider_up.svg",
-            background=Colours.BACKGROUND,
+            background=Colours.DARKER_BACKGROUND,
         ),
         widget.GroupBox(
             fontsize=18,
@@ -22,7 +26,7 @@ top_bar = bar.Bar(
             active=Colours.GOLD,
             block_highlight_text_color=Colours.WHITE,
             inactive=Colours.GREY,
-            background=Colours.BACKGROUND,
+            background=Colours.DARKER_BACKGROUND,
             rounded=True,
             this_current_screen_border=Colours.HIGHLIGHT,
             this_screen_border=Colours.BACKGROUND,
@@ -34,14 +38,14 @@ top_bar = bar.Bar(
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_shadow_divider_down.svg",
-            background=Colours.BACKGROUND,
+            background=Colours.DARKER_BACKGROUND,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/layout.png",
-            background=Colours.DARKER_BACKGROUND,
+            background=Colours.BACKGROUND,
         ),
         widget.CurrentLayout(
-            background=Colours.DARKER_BACKGROUND,
+            background=Colours.BACKGROUND,
             foreground=Colours.WHITE,
             fmt="{}",
             font=FONT_TYPE,
@@ -49,10 +53,10 @@ top_bar = bar.Bar(
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_semi_circle_right.svg",
-            background=Colours.BACKGROUND,
+            background=Colours.DARKER_BACKGROUND,
         ),
         widget.WindowName(
-            background=Colours.BACKGROUND,
+            background=Colours.DARKER_BACKGROUND,
             format="{name}",
             font=FONT_TYPE,
             foreground=Colours.WHITE,
@@ -60,12 +64,12 @@ top_bar = bar.Bar(
             fontsize=13,
         ),
         widget.Image(
+            background=Colours.DARKER_BACKGROUND,
             filename="~/.config/qtile/assets/graphics/bar_semi_circle_left.svg",
-            background=Colours.BACKGROUND,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/internet.png",
-            background=Colours.DARKER_BACKGROUND,
+            background=Colours.BACKGROUND,
             margin_y=6,
             padding=8,
         ),
@@ -74,66 +78,55 @@ top_bar = bar.Bar(
             font=FONT_TYPE,
             fontsize=13,
             interface="wlp2s0",
-            background=Colours.DARKER_BACKGROUND,
+            background=Colours.BACKGROUND,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
-            background=Colours.DARKER_BACKGROUND,
+            background=Colours.BACKGROUND,
         ),
         widget.Image(
             padding=10,
             margin_y=6,
             filename="~/.config/qtile/assets/graphics/bluetooth.svg",
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
         ),
         widget.Bluetooth(
             hci="/org/bluez/hci0",
             experimental=True,
             padding=8,
             fontsize=13,
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
         ),
         widget.Image(
             margin_y=2,
             margin_x=2,
             filename="~/.config/qtile/assets/graphics/cpu.png",
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
         ),
         widget.CPU(
             format="{load_percent}%",
             foreground=Colours.WHITE,
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
             min_chars=6,
             fontsize=13,
             max_chars=6,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
-            background=Colours.DARK_BLUE,
-        ),
-        widget.GenPollCommand(
-            cmd="asusctl profile -p | grep 'Active profile' | awk '{print $NF}'",
-            update_interval=5,
-            fmt="⚡ {}",
-            shell=True,
-            background=Colours.DARK_BLUE,
-        ),
-        widget.Image(
-            filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
         ),
         widget.Image(
             margin_y=4,
             margin_x=2,
             filename="~/.config/qtile/assets/graphics/ram.png",
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
         ),
         widget.Memory(
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
             format="{MemUsed: .0f}{mm}",
             foreground=Colours.WHITE,
             font=FONT_TYPE,
@@ -142,18 +135,18 @@ top_bar = bar.Bar(
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
         ),
         widget.BatteryIcon(
             battery="BAT0",
             theme_path="~/.config/qtile/assets/graphics/battery_theme/",
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
             scale=1,
         ),
         widget.Battery(
             battery="BAT0",
             font=FONT_TYPE,
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
             foreground=Colours.WHITE,
             format="{percent:2.0%}",
             fontsize=13,
@@ -162,11 +155,22 @@ top_bar = bar.Bar(
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
+        ),
+        widget.GenPollCommand(
+            cmd="asusctl profile -p | grep 'Active profile' | awk '{print $NF}'",
+            update_interval=5,
+            fmt="⚡ {}",
+            shell=True,
+            background=Colours.BACKGROUND,
+        ),
+        widget.Image(
+            filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
+            background=Colours.BACKGROUND,
         ),
         widget.Volume(
             font=FONT_TYPE,
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
             foreground=Colours.WHITE,
             fontsize=18,
             emoji=True,
@@ -174,26 +178,29 @@ top_bar = bar.Bar(
         ),
         widget.Spacer(
             length=-5,
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
         ),
         widget.GenPollText(
             update_interval=2,
             func=get_audio_output_device,
             font=FONT_TYPE,
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
             foreground=Colours.WHITE,
             fontsize=13,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_divider_6.svg",
-            background=Colours.DARK_BLUE,
+            background=Colours.BACKGROUND,
         ),
         widget.Clock(
             background=Colours.HIGHLIGHT,
             foreground=Colours.BLACK,
             font=FONT_TYPE,
             fontsize=18,
-            padding=2,
+        ),
+        widget.Spacer(
+            length=8,
+            background=Colours.HIGHLIGHT,
         ),
     ],
     size=32,

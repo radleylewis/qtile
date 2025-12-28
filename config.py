@@ -1,3 +1,6 @@
+import os
+import subprocess
+
 from libqtile import hook, qtile
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.layout.floating import Floating
@@ -8,39 +11,98 @@ from libqtile.log_utils import logger
 
 from assets.constants import Colours, FONT_TYPE
 
-from scripts.audio import (
+from utils.audio import (
     raise_volume,
     toggle_mute_audio_output,
     lower_volume,
     toggle_mute_audio_input,
 )
-from scripts.menus import (
-    autostart,
-    bluetooth_menu,
-    performance_menu,
-    power_menu,
-    recorder_menu,
-    wifi_menu,
-)
-from scripts.brightness import decrease_brightness, increase_brightness
+from utils.brightness import decrease_brightness, increase_brightness
+
 from top_bar import top_bar
 from scripts.utils import shift_group, take_screenshot
-
-from scripts.performance import set_performance_profile
 
 terminal = "alacritty"
 
 meta = "mod4"
 alt = "mod1"
 
+XDG_CONFIG_DIR = os.environ.get("XDG_CONFIG_HOME", "~/.config")
+
 
 @hook.subscribe.startup_once
 def on_startup():
-    autostart()
+    autostart = os.path.expanduser(f"{XDG_CONFIG_DIR}/qtile/scripts/autostart.sh")
+    subprocess.Popen([autostart])
 
+
+mouse = [
+    # Hold mod and right-drag to resize
+    Drag(
+        ["mod4"],
+        "Button3",
+        lazy.window.set_size_floating(),
+        start=lazy.window.get_size(),
+    ),
+]
 
 keys = [
+    # ROFI SCRIPTS
+    Key(
+        [meta],
+        "space",
+        lazy.spawn('rofi -show combi -modes combi -combi-modes "window,drun"'),
+        desc="Spawn rofi apps + open apps",
+    ),
+    Key([meta], "Return", lazy.spawn("rofi -show run")),
+    Key([meta, "shift"], "f", lazy.spawn("rofi -show filebrowser -show-hidden")),
+    Key([meta, "shift"], "r", lazy.spawn("rofi -show run")),
+    Key([meta], "w", lazy.spawn("rofi -show window"), desc="Spawn rofi"),
+    Key(
+        [meta],
+        "Escape",
+        lazy.spawn(f"{XDG_CONFIG_DIR}/rofi/scripts/power-manager"),
+        desc="rofi power menu",
+    ),
+    Key(
+        [meta],
+        "p",
+        lazy.spawn(
+            f"rofi -show performance-profile -theme {XDG_CONFIG_DIR}/rofi/performance-profile.rasi"
+        ),
+        desc="rofi performance profile menu",
+    ),
+    Key(
+        [meta],
+        "i",
+        lazy.spawn(
+            f"rofi -show microphone -theme {XDG_CONFIG_DIR}/rofi/microphone.rasi"
+        ),
+        desc="rofi audio input menu",
+    ),
+    Key(
+        [meta],
+        "n",
+        lazy.spawn(f"{XDG_CONFIG_DIR}/rofi/scripts/wifi"),
+        desc="rofi WiFi menu",
+    ),
+    Key(
+        [meta],
+        "r",
+        lazy.spawn(f"rofi -show av-recorder -theme {XDG_CONFIG_DIR}/rofi/common.rasi"),
+        desc="rofi screen/mic recorder menu",
+    ),
+    # Key([meta], "b", bluetooth_menu, desc="rofi bluetooth menu"),
+    # END ROFI SCRIPTS
     Key([], "Print", lazy.function(take_screenshot)),
+    Key(
+        [meta],
+        "c",
+        lazy.spawn(
+            "ffplay -f v4l2 -input_format mjpeg -video_size 1920x1080 /dev/video1"
+        ),
+        desc="Run ffplay cropped GoPro feed",
+    ),
     Key([meta, alt], "Left", lazy.screen.prev_group(), desc="Move to previous group"),
     Key([meta, alt], "h", lazy.screen.prev_group(), desc="Move to previous group"),
     Key([meta, alt], "Right", lazy.screen.next_group(), desc="Move to next group"),
@@ -77,7 +139,7 @@ keys = [
     Key([meta], "l", lazy.layout.right(), desc="Move focus to right"),
     Key([meta], "j", lazy.layout.down(), desc="Move focus down"),
     Key([meta], "k", lazy.layout.up(), desc="Move focus up"),
-    Key([meta], "Return", lazy.layout.next(), desc="Move window focus to other window"),
+    Key([meta], "Tab", lazy.layout.next(), desc="Move window focus to other window"),
     Key(
         [meta, "shift"], "h", lazy.layout.shuffle_left(), desc="Move window to the left"
     ),
@@ -96,10 +158,7 @@ keys = [
     Key([meta], "o", lazy.layout.maximize()),
     Key([meta], "t", lazy.spawn(terminal), desc="Launch terminal"),
     Key([meta], "d", lazy.next_layout(), desc="Toggle between layouts"),
-    Key([meta], "Tab", lazy.next_screen()),
     Key([meta], "q", lazy.window.kill(), desc="Kill focused window"),
-    Key([meta], "Escape", power_menu, desc="power menu"),
-    Key([meta], "p", performance_menu, desc="performance menu"),
     Key(
         [meta],
         "z",
@@ -114,14 +173,12 @@ keys = [
     ),
     Key([meta], "Tab", lazy.group.next_window(), desc="Cycle through windows"),
     Key(
-        [meta], "Tab", lazy.group.next_window(), desc="Cycle backwards through windows"
+        [meta, "shift"],
+        "Tab",
+        lazy.group.next_window(),
+        desc="Cycle backwards through windows",
     ),
     Key([meta, "control"], "r", lazy.reload_config(), desc="Reload the config"),
-    Key([meta], "space", lazy.spawn("rofi -show drun"), desc="Spawn rofi apps"),
-    Key([meta], "w", lazy.spawn("rofi -show window"), desc="Spawn rofi"),
-    Key([meta], "n", wifi_menu, desc="Spawn rofi WiFi menu"),
-    Key([meta], "r", recorder_menu, desc="Spawn rofi recorder menu"),
-    Key([meta], "b", bluetooth_menu, desc="Spawn rofi bluetooth menu"),
     # Key([], "XF86Keyboard", cycle_keyboard_layout),
     Key([], "XF86Favorites", lazy.spawn("brave")),
     Key([], "XF86Go", lazy.spawn("rfkill unblock bluetooth")),

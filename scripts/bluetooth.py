@@ -6,6 +6,8 @@ import re
 import time
 from typing import List, Tuple
 
+from utils import notify
+
 DIVIDER = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 BACK_BUTTON = "Back"
 
@@ -58,16 +60,6 @@ class BluetoothManager:
         else:
             return "Scan: off", False
 
-    def send_notification(self, title: str, message: str, urgency: str = "normal"):
-        """Send a dunst notification"""
-        try:
-            subprocess.run(
-                ["dunstify", "-u", urgency, "-i", "bluetooth", title, message],
-                check=False,
-            )
-        except subprocess.CalledProcessError:
-            pass  # Silently fail if no notification system available
-
     def toggle_scan(self):
         """Toggles scanning state"""
         _, is_scanning = self.scan_on()
@@ -78,12 +70,12 @@ class BluetoothManager:
             except subprocess.CalledProcessError:
                 pass
             self.run_bluetoothctl("scan off")
-            self.send_notification("Bluetooth", "Scanning stopped")
+            notify("Bluetooth", "Scanning stopped")
             self.show_menu()
         else:
             # Start scanning in background
             subprocess.Popen(["bluetoothctl", "--timeout", "5", "scan", "on"])
-            self.send_notification("Bluetooth", "Scanning for devices...")
+            notify("Bluetooth", "Scanning for devices...")
             self.show_menu()
 
     def pairable_on(self) -> Tuple[str, bool]:
@@ -154,7 +146,7 @@ class BluetoothManager:
                 subprocess.run(["bluetoothctl", "pair", mac], timeout=30)
                 subprocess.run(["bluetoothctl", "trust", mac], timeout=5)
             except subprocess.TimeoutExpired:
-                self.send_notification("Bluetooth", "Pairing timeout", "critical")
+                notify("Bluetooth", "Pairing timeout", urgency="critical")
         self.device_menu(device)
 
     def device_trusted(self, mac: str) -> Tuple[str, bool]:
@@ -267,7 +259,7 @@ class BluetoothManager:
             self.toggle_trust(mac, device)
         elif chosen == "Remove":
             self.run_bluetoothctl(f"remove {mac}")
-            self.send_notification("Bluetooth", f"Removed {device_name}")
+            notify("Bluetooth", f"Removed {device_name}")
             self.show_menu()  # Go back to main menu after removal
         elif chosen == BACK_BUTTON:
             self.show_menu()
@@ -306,7 +298,7 @@ class BluetoothManager:
             options = f"{power}\nExit"
 
         # Open rofi menu
-        chosen = self.rofi_menu(options, "Bluetooth")
+        chosen = self.rofi_menu(options, "")
 
         # Match chosen option to command
         if chosen == "" or chosen == DIVIDER:

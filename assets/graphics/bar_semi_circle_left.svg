@@ -4,5 +4,5 @@
       <feDropShadow dx="-12" dy="" stdDeviation="2" flood-opacity="0.8"/>
     </filter>
   </defs>
-  <circle r="100" cx="200" cy="100" fill="#101c29" filter="url(#f2)" />
+  <circle r="100" cx="200" cy="100" fill="#1b1e37" filter="url(#f2)" />
 </svg> 

@@ -80,6 +80,7 @@ def notify(
     replace_id: Optional[int] = None,
     app_name: Optional[str] = "",
     expire_time: int = 1_200,
+    urgency: str = "normal",
 ):
     cmd = ["notify-send"]
     if replace_id:
@@ -87,6 +88,7 @@ def notify(
     if app_name:
         cmd.append(f"--app-name={app_name}")
 
+    cmd.append(f"--urgency={urgency}")
     cmd.append(f"--expire-time={expire_time}")
 
     subprocess.run(cmd + [title, message], check=False)
