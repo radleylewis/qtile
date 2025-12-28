@@ -7,35 +7,6 @@ from typing import Optional
 from libqtile.lazy import lazy
 
 
-def get_audio_input_device():
-    """Return the current default audio input (microphone) using pactl."""
-    try:
-        result = subprocess.run(
-            ["pactl", "get-default-source"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        source = result.stdout.strip()
-
-        # Get human-readable description
-        desc = subprocess.run(
-            ["pactl", "list", "sources"],
-            capture_output=True,
-            text=True,
-        ).stdout
-
-        for block in desc.split("Source #"):
-            if source in block:
-                for line in block.splitlines():
-                    if "Description:" in line:
-                        return line.split("Description:")[1].strip()
-
-        return source  # fallback
-    except Exception:
-        return "No Mic"
-
-
 def get_audio_output_device():
     sink = subprocess.run(
         ["pactl", "get-default-sink"], capture_output=True, text=True
