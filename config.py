@@ -83,7 +83,7 @@ keys = [
     Key(
         [meta],
         "n",
-        lazy.spawn(f"{XDG_CONFIG_DIR}/rofi/scripts/wifi"),
+        lazy.spawn(f"{XDG_CONFIG_DIR}/rofi/scripts/wifi-manager"),
         desc="rofi WiFi menu",
     ),
     Key(
