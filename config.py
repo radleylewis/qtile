@@ -7,7 +7,6 @@ from libqtile.layout.floating import Floating
 from libqtile.layout.max import Max
 from libqtile.layout.xmonad import MonadTall
 from libqtile.lazy import lazy
-from libqtile.log_utils import logger
 
 from assets.constants import Colours, FONT_TYPE
 
@@ -48,16 +47,6 @@ def center_bluetuith(client):
         client.set_size_floating(w, h)
         client.set_position_floating((sw - w) // 2, (sh - h) // 2)
 
-
-mouse = [
-    # Hold mod and right-drag to resize
-    Drag(
-        ["mod4"],
-        "Button3",
-        lazy.window.set_size_floating(),
-        start=lazy.window.get_size(),
-    ),
-]
 
 keys = [
     # ROFI SCRIPTS
@@ -106,7 +95,7 @@ keys = [
         lazy.spawn(f"{XDG_CONFIG_DIR}/rofi/scripts/wifi-manager"),
         desc="rofi WiFi menu",
     ),
-    Key([meta], "b", lazy.spawn("alacritty --title bluetuith -e bluetuith")),
+    Key([meta], "b", lazy.spawn(f"{terminal} --class bluetuith -e bluetuith")),
     Key(
         [meta],
         "r",
@@ -158,7 +147,6 @@ keys = [
     Key([meta], "l", lazy.layout.right(), desc="Move focus to right"),
     Key([meta], "j", lazy.layout.down(), desc="Move focus down"),
     Key([meta], "k", lazy.layout.up(), desc="Move focus up"),
-    Key([meta], "Tab", lazy.layout.next(), desc="Move window focus to other window"),
     Key(
         [meta, "shift"], "h", lazy.layout.shuffle_left(), desc="Move window to the left"
     ),
@@ -275,9 +263,8 @@ screens = make_screens()
 
 # This hook ensures screens are reconfigured when monitors change
 @hook.subscribe.screen_change
-def on_screen_change(event):
-    logger.warning(f"Screen change detected: {event}")
-    lazy.restart()
+def on_screen_change(_event):
+    subprocess.run(["qtile", "cmd-obj", "-o", "cmd", "-f", "restart"])
 
 
 # Drag floating layouts.
@@ -302,6 +289,7 @@ floats_kept_above = True
 cursor_warp = False
 floating_layout = Floating(
     float_rules=[
+        Match(wm_class="bluetuith"),
         # Run the utility of `xprop` to see the wm class and name of an X client.
         *Floating.default_float_rules,
         Match(wm_class="confirmreset"),  # gitk

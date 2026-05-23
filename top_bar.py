@@ -3,7 +3,6 @@ from libqtile import bar, widget
 from assets.constants import Colours, FONT_TYPE
 from utils.audio import get_audio_output_device
 
-
 top_bar = bar.Bar(
     [
         widget.Spacer(
@@ -188,6 +187,14 @@ top_bar = bar.Bar(
             length=-5,
             background=Colours.BACKGROUND,
         ),
+        widget.PulseVolume(
+            emoji=True,
+            emoji_list=["󰝟", "󰕿", "󰖀", "󰕾"],  # muted, low, mid, high
+            font=FONT_TYPE,
+            background=Colours.BACKGROUND,
+            foreground=Colours.WHITE,
+            fontsize=16,
+        ),
         widget.GenPollText(
             update_interval=2,
             func=get_audio_output_device,
@@ -195,11 +202,6 @@ top_bar = bar.Bar(
             background=Colours.BACKGROUND,
             foreground=Colours.WHITE,
             fontsize=13,
-        ),
-        widget.PulseVolume(
-            font=FONT_TYPE,
-            background=Colours.BACKGROUND,
-            foreground=Colours.WHITE,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_divider_6.svg",

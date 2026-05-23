@@ -2,7 +2,6 @@ import subprocess
 import re
 from libqtile.lazy import lazy
 
-
 # ─────────────────────────────────────────────
 #  Helpers
 # ─────────────────────────────────────────────
@@ -37,9 +36,11 @@ def get_mic_status():
     except subprocess.CalledProcessError:
         return True
 
+
 # ─────────────────────────────────────────────
 #  Output
 # ─────────────────────────────────────────────
+
 
 def get_audio_output_device():
     sink = subprocess.run(
@@ -53,18 +54,19 @@ def get_audio_output_device():
     # Isolate the block for the current sink
     match = re.search(rf"(?s)Name: {re.escape(sink)}\n(.*?)(?=\nName:|\Z)", sinks_out)
     if not match:
-        return "Audio: Unknown"
+        return "N/A"
 
     block = match.group(1)
 
     port_match = re.search(r"Active Port:\s*(\S+)", block)
     if not port_match:
-        return "Audio: Unknown"
+        return "N/A"
 
     port = port_match.group(1)
     pretty = port.replace("analog-output-", "").replace("-", " ").title()
 
     return pretty
+
 
 def send_mic_notification(is_muted: bool):
     """Show a mako notification for mic state"""
@@ -85,7 +87,7 @@ def send_mic_notification(is_muted: bool):
 
 
 @lazy.function
-def toggle_mute_audio_input(qtile):
+def toggle_mute_audio_input(_qtile):
     """Toggle microphone mute"""
     try:
         subprocess.run(
