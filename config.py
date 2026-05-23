@@ -36,6 +36,19 @@ def on_startup():
     subprocess.Popen([autostart])
 
 
+# Bluetooth Manager
+@hook.subscribe.client_new
+def center_bluetuith(client):
+    if client.window.get_wm_class() and "bluetuith" in client.window.get_wm_class():
+        screen = client.qtile.current_screen
+        sw = screen.width
+        sh = screen.height
+        w = 800
+        h = 400
+        client.set_size_floating(w, h)
+        client.set_position_floating((sw - w) // 2, (sh - h) // 2)
+
+
 mouse = [
     # Hold mod and right-drag to resize
     Drag(
@@ -54,7 +67,6 @@ keys = [
         lazy.spawn('rofi -show combi -modes combi -combi-modes "window,drun"'),
         desc="Spawn rofi apps + open apps",
     ),
-    Key([meta], "Return", lazy.spawn("rofi -show run")),
     Key([meta, "shift"], "f", lazy.spawn("rofi -show filebrowser -show-hidden")),
     Key([meta, "shift"], "r", lazy.spawn("rofi -show run")),
     Key([meta], "w", lazy.spawn("rofi -show window"), desc="Spawn rofi"),
@@ -74,6 +86,14 @@ keys = [
     ),
     Key(
         [meta],
+        "a",
+        lazy.spawn(
+            f"rofi -show audio-output -theme {XDG_CONFIG_DIR}/rofi/microphone.rasi"
+        ),
+        desc="rofi audio output menu",
+    ),
+    Key(
+        [meta],
         "i",
         lazy.spawn(
             f"rofi -show microphone -theme {XDG_CONFIG_DIR}/rofi/microphone.rasi"
@@ -86,14 +106,13 @@ keys = [
         lazy.spawn(f"{XDG_CONFIG_DIR}/rofi/scripts/wifi-manager"),
         desc="rofi WiFi menu",
     ),
+    Key([meta], "b", lazy.spawn("alacritty --title bluetuith -e bluetuith")),
     Key(
         [meta],
         "r",
         lazy.spawn(f"rofi -show av-recorder -theme {XDG_CONFIG_DIR}/rofi/common.rasi"),
         desc="rofi screen/mic recorder menu",
     ),
-    # Key([meta], "b", bluetooth_menu, desc="rofi bluetooth menu"),
-    # END ROFI SCRIPTS
     Key([], "Print", lazy.function(take_screenshot)),
     Key(
         [meta],
@@ -156,7 +175,7 @@ keys = [
     Key([meta], "u", lazy.layout.reset()),
     Key([meta, "shift"], "n", lazy.layout.normalize()),
     Key([meta], "o", lazy.layout.maximize()),
-    Key([meta], "t", lazy.spawn(terminal), desc="Launch terminal"),
+    Key([meta], "Return", lazy.spawn(terminal), desc="Launch terminal"),
     Key([meta], "d", lazy.next_layout(), desc="Toggle between layouts"),
     Key([meta], "q", lazy.window.kill(), desc="Kill focused window"),
     Key(

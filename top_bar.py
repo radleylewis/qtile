@@ -176,7 +176,7 @@ top_bar = bar.Bar(
         widget.GenPollCommand(
             cmd="powerprofilesctl get",
             update_interval=5,
-            fmt="⚡ {}",
+            fmt="⚡  {}",
             shell=True,
             background=Colours.BACKGROUND,
         ),
@@ -188,14 +188,14 @@ top_bar = bar.Bar(
             length=-5,
             background=Colours.BACKGROUND,
         ),
-        # widget.GenPollText(
-        #     update_interval=2,
-        #     func=get_audio_output_device,
-        #     font=FONT_TYPE,
-        #     background=Colours.BACKGROUND,
-        #     foreground=Colours.WHITE,
-        #     fontsize=13,
-        # ),
+        widget.GenPollText(
+            update_interval=2,
+            func=get_audio_output_device,
+            font=FONT_TYPE,
+            background=Colours.BACKGROUND,
+            foreground=Colours.WHITE,
+            fontsize=13,
+        ),
         widget.PulseVolume(
             font=FONT_TYPE,
             background=Colours.BACKGROUND,
