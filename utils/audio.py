@@ -16,7 +16,7 @@ def notify(title: str, body: str, urgency: str = "normal", replaces_id: str = ""
         cmd.extend(["-r", replaces_id])
 
     cmd.extend([title, body])
-    subprocess.run(cmd, check=False)
+    subprocess.Popen(cmd)
 
 
 # ─────────────────────────────────────────────
@@ -37,6 +37,34 @@ def get_mic_status():
     except subprocess.CalledProcessError:
         return True
 
+# ─────────────────────────────────────────────
+#  Output
+# ─────────────────────────────────────────────
+
+def get_audio_output_device():
+    sink = subprocess.run(
+        ["pactl", "get-default-sink"], capture_output=True, text=True
+    ).stdout.strip()
+
+    sinks_out = subprocess.run(
+        ["pactl", "list", "sinks"], capture_output=True, text=True
+    ).stdout
+
+    # Isolate the block for the current sink
+    match = re.search(rf"(?s)Name: {re.escape(sink)}\n(.*?)(?=\nName:|\Z)", sinks_out)
+    if not match:
+        return "Audio: Unknown"
+
+    block = match.group(1)
+
+    port_match = re.search(r"Active Port:\s*(\S+)", block)
+    if not port_match:
+        return "Audio: Unknown"
+
+    port = port_match.group(1)
+    pretty = port.replace("analog-output-", "").replace("-", " ").title()
+
+    return pretty
 
 def send_mic_notification(is_muted: bool):
     """Show a mako notification for mic state"""
@@ -147,7 +175,7 @@ def raise_volume(qtile):
     if not sink:
         return
 
-    subprocess.run(["pactl", "set-sink-volume", sink, "+5%"])
+    subprocess.Popen(["pactl", "set-sink-volume", sink, "+5%"])
     volume, muted = get_volume()
     send_volume_notification(volume, muted)
 
@@ -159,7 +187,7 @@ def lower_volume(qtile):
     if not sink:
         return
 
-    subprocess.run(["pactl", "set-sink-volume", sink, "-5%"])
+    subprocess.Popen(["pactl", "set-sink-volume", sink, "-5%"])
     volume, muted = get_volume()
     send_volume_notification(volume, muted)
 

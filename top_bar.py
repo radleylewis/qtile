@@ -1,7 +1,7 @@
 from libqtile import bar, widget
 
 from assets.constants import Colours, FONT_TYPE
-from scripts.utils import get_audio_output_device
+from utils.audio import get_audio_output_device
 
 
 top_bar = bar.Bar(
@@ -74,10 +74,10 @@ top_bar = bar.Bar(
             padding=8,
         ),
         widget.WlanIw(
-            format="{essid} {percent:2.0%}",
+            format="{essid} {quality}%",
             font=FONT_TYPE,
             fontsize=13,
-            interface="wlp2s0",
+            interface="wlan0",
             background=Colours.BACKGROUND,
         ),
         widget.Image(
@@ -153,12 +153,28 @@ top_bar = bar.Bar(
             low_foreground=Colours.WARNING,
             low_percentage=0.2,
         ),
+        widget.BatteryIcon(
+            battery="BAT1",
+            theme_path="~/.config/qtile/assets/graphics/battery_theme/",
+            background=Colours.BACKGROUND,
+            scale=1,
+        ),
+        widget.Battery(
+            battery="BAT1",
+            font=FONT_TYPE,
+            background=Colours.BACKGROUND,
+            foreground=Colours.WHITE,
+            format="{percent:2.0%}",
+            fontsize=13,
+            low_foreground=Colours.WARNING,
+            low_percentage=0.2,
+        ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
             background=Colours.BACKGROUND,
         ),
         widget.GenPollCommand(
-            cmd="asusctl profile -p | grep 'Active profile' | awk '{print $NF}'",
+            cmd="powerprofilesctl get",
             update_interval=5,
             fmt="⚡ {}",
             shell=True,
@@ -168,25 +184,22 @@ top_bar = bar.Bar(
             filename="~/.config/qtile/assets/graphics/bar_divider_5.svg",
             background=Colours.BACKGROUND,
         ),
-        widget.Volume(
-            font=FONT_TYPE,
-            background=Colours.BACKGROUND,
-            foreground=Colours.WHITE,
-            fontsize=18,
-            emoji=True,
-            padding=10,
-        ),
         widget.Spacer(
             length=-5,
             background=Colours.BACKGROUND,
         ),
-        widget.GenPollText(
-            update_interval=2,
-            func=get_audio_output_device,
+        # widget.GenPollText(
+        #     update_interval=2,
+        #     func=get_audio_output_device,
+        #     font=FONT_TYPE,
+        #     background=Colours.BACKGROUND,
+        #     foreground=Colours.WHITE,
+        #     fontsize=13,
+        # ),
+        widget.PulseVolume(
             font=FONT_TYPE,
             background=Colours.BACKGROUND,
             foreground=Colours.WHITE,
-            fontsize=13,
         ),
         widget.Image(
             filename="~/.config/qtile/assets/graphics/bar_divider_6.svg",
