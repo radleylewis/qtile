@@ -1,18 +1,19 @@
 import subprocess
 import re
 from libqtile.lazy import lazy
+import threading
 
 # ─────────────────────────────────────────────
 #  Helpers
 # ─────────────────────────────────────────────
 
 
-def notify(title: str, body: str, urgency: str = "normal", replaces_id: str = ""):
+def notify(title: str, body: str, urgency: str = "normal", tag: str = ""):
     """Wrapper around notify-send (for mako)"""
     cmd = ["notify-send", "-u", urgency]
 
-    if replaces_id:
-        cmd.extend(["-r", replaces_id])
+    if tag:
+        cmd += [f"--hint=string:x-canonical-private-synchronous:{tag}"]
 
     cmd.extend([title, body])
     subprocess.Popen(cmd)
@@ -37,6 +38,25 @@ def get_mic_status():
         return True
 
 
+def send_mic_notification(is_muted: bool):
+    if is_muted:
+        notify("Microphone", "󰍭 Microphone Muted", urgency="normal", tag="microphone")
+    else:
+        notify("Microphone", "󰍬 Microphone Live", urgency="critical", tag="microphone")
+
+
+@lazy.function
+def toggle_mute_audio_input(_qtile):
+    """Toggle microphone mute"""
+    try:
+        subprocess.run(
+            ["pactl", "set-source-mute", "@DEFAULT_SOURCE@", "toggle"], check=True
+        )
+        send_mic_notification(get_mic_status())
+    except subprocess.CalledProcessError:
+        notify("Microphone Error", "Could not toggle mic", urgency="critical")
+
+
 # ─────────────────────────────────────────────
 #  Output
 # ─────────────────────────────────────────────
@@ -51,52 +71,17 @@ def get_audio_output_device():
         ["pactl", "list", "sinks"], capture_output=True, text=True
     ).stdout
 
-    # Isolate the block for the current sink
     match = re.search(rf"(?s)Name: {re.escape(sink)}\n(.*?)(?=\nName:|\Z)", sinks_out)
     if not match:
         return "N/A"
 
     block = match.group(1)
-
     port_match = re.search(r"Active Port:\s*(\S+)", block)
     if not port_match:
         return "N/A"
 
     port = port_match.group(1)
-    pretty = port.replace("analog-output-", "").replace("-", " ").title()
-
-    return pretty
-
-
-def send_mic_notification(is_muted: bool):
-    """Show a mako notification for mic state"""
-    if is_muted:
-        notify(
-            "Microphone",
-            "🎤❌ Microphone Muted",
-            urgency="normal",
-            replaces_id="2000",
-        )
-    else:
-        notify(
-            "Microphone",
-            "🎤 Microphone Live",
-            urgency="critical",  # red warning when mic is hot
-            replaces_id="2000",
-        )
-
-
-@lazy.function
-def toggle_mute_audio_input(_qtile):
-    """Toggle microphone mute"""
-    try:
-        subprocess.run(
-            ["pactl", "set-source-mute", "@DEFAULT_SOURCE@", "toggle"], check=True
-        )
-        send_mic_notification(get_mic_status())
-
-    except subprocess.CalledProcessError:
-        notify("Microphone Error", "Could not toggle mic", urgency="critical")
+    return port.replace("analog-output-", "").replace("-", " ").title()
 
 
 # ─────────────────────────────────────────────
@@ -127,41 +112,56 @@ def get_volume():
             text=True,
             check=True,
         )
-
         m = subprocess.run(
-            ["pactl", "get-sink-mute", sink], capture_output=True, text=True, check=True
+            ["pactl", "get-sink-mute", sink],
+            capture_output=True,
+            text=True,
+            check=True,
         )
-
         volume_match = re.search(r"/\s*(\d+)%", v.stdout)
         volume = int(volume_match.group(1)) if volume_match else 0
-
         muted = "yes" in m.stdout
         return volume, muted
-
     except subprocess.CalledProcessError:
         return 0, False
 
 
 def send_volume_notification(volume: int, is_muted: bool):
-    """Show volume notification with bar"""
     if is_muted:
-        icon = "🔇"
+        icon = "󰝟"
         message = f"Volume Muted ({volume}%)"
-        urgency = "normal"
+        bar = '<span color="#e2c779">' + "░" * 35 + "</span>"
     else:
-        icon = "🔈" if volume == 0 else "🔉" if volume < 50 else "🔊"
+        icon = "󰕿" if volume == 0 else "󰖀" if volume < 50 else "󰕾"
         message = f"Volume: {volume}%"
-        urgency = "low"
 
-    bar_length = 20
-    filled = int(volume / 100 * bar_length)
-    bar = "█" * filled + "░" * (bar_length - filled)
+        clamped = min(volume, 130)
+        bar_len = 35
+        safe_blocks = int(bar_len * (100 / 130))
+        filled = int((clamped / 130) * bar_len)
 
+        safe_filled = min(filled, safe_blocks)
+        danger_filled = max(0, filled - safe_blocks)
+        empty = bar_len - safe_filled - danger_filled
+
+        bar = (
+            '<span color="#7ee787">'
+            + "█" * safe_filled
+            + "</span>"
+            + '<span color="#ff6b8a">'
+            + "█" * danger_filled
+            + "</span>"
+            + '<span color="#e2c779">'
+            + "░" * empty
+            + "</span>"
+        )
+
+    urgency = "critical" if volume > 100 else "normal" if is_muted else "low"
     notify(
         "Volume",
-        f"{icon} {message}\n{bar}",
+        f'<span color="#e2c779">{icon} {message}</span>\n{bar}',
         urgency=urgency,
-        replaces_id="1000",
+        tag="volume",
     )
 
 
@@ -171,36 +171,46 @@ def send_volume_notification(volume: int, is_muted: bool):
 
 
 @lazy.function
-def raise_volume(qtile):
-    """Increase volume"""
-    sink = get_default_sink()
-    if not sink:
-        return
+def raise_volume(_qtile):
+    def _do():
+        sink = get_default_sink()
+        if not sink:
+            return
+        volume, _ = get_volume()
+        if volume >= 130:
+            return
+        subprocess.run(["pactl", "set-sink-volume", sink, "+5%"])
+        volume, muted = get_volume()
+        if volume > 130:
+            subprocess.run(["pactl", "set-sink-volume", sink, "130%"])
+            volume = 130
+            muted = False
+        send_volume_notification(volume, muted)
 
-    subprocess.Popen(["pactl", "set-sink-volume", sink, "+5%"])
-    volume, muted = get_volume()
-    send_volume_notification(volume, muted)
-
-
-@lazy.function
-def lower_volume(qtile):
-    """Decrease volume"""
-    sink = get_default_sink()
-    if not sink:
-        return
-
-    subprocess.Popen(["pactl", "set-sink-volume", sink, "-5%"])
-    volume, muted = get_volume()
-    send_volume_notification(volume, muted)
+    threading.Thread(target=_do, daemon=True).start()
 
 
 @lazy.function
-def toggle_mute_audio_output(qtile):
-    """Mute/unmute speakers"""
-    sink = get_default_sink()
-    if not sink:
-        return
+def lower_volume(_qtile):
+    def _do():
+        sink = get_default_sink()
+        if not sink:
+            return
+        subprocess.run(["pactl", "set-sink-volume", sink, "-5%"])
+        volume, muted = get_volume()
+        send_volume_notification(volume, muted)
 
-    subprocess.run(["pactl", "set-sink-mute", sink, "toggle"])
-    volume, muted = get_volume()
-    send_volume_notification(volume, muted)
+    threading.Thread(target=_do, daemon=True).start()
+
+
+@lazy.function
+def toggle_mute_audio_output(_qtile):
+    def _do():
+        sink = get_default_sink()
+        if not sink:
+            return
+        subprocess.run(["pactl", "set-sink-mute", sink, "toggle"])
+        volume, muted = get_volume()
+        send_volume_notification(volume, muted)
+
+    threading.Thread(target=_do, daemon=True).start()

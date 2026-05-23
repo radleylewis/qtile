@@ -1,4 +1,6 @@
 import subprocess
+import threading
+
 from libqtile.lazy import lazy
 
 from scripts.utils import notify
@@ -22,7 +24,7 @@ def get_brightness():
 
 def send_brightness_notification(brightness):
     """Show brightness notification via mako/notify-send."""
-    icon = "🔅" if brightness < 50 else "🔆"
+    icon = "󰖔" if brightness < 50 else "󰖙"
 
     bar_len = 35
     filled = int((brightness / 100) * bar_len)
@@ -30,18 +32,24 @@ def send_brightness_notification(brightness):
 
     title = "Screen Brightness"
     message = f"{icon} Brightness: {brightness}%\n{bar}"
-    notify(title, message, replace_id=3_000, app_name="brightness-control")
+    notify(title, message, app_name="brightness-control", tag="brightness")
 
 
 @lazy.function
 def increase_brightness(_qtile, amount=5):
-    subprocess.run(["brightnessctl", "set", f"{amount}%+"], check=True)
-    brightness = get_brightness()
-    send_brightness_notification(brightness)
+    def _do():
+        subprocess.run(["brightnessctl", "set", f"{amount}%+"])
+        brightness = get_brightness()
+        send_brightness_notification(brightness)
+
+    threading.Thread(target=_do, daemon=True).start()
 
 
 @lazy.function
 def decrease_brightness(_qtile, amount=5):
-    subprocess.run(["brightnessctl", "set", f"{amount}%-"], check=True)
-    brightness = get_brightness()
-    send_brightness_notification(brightness)
+    def _do():
+        subprocess.run(["brightnessctl", "set", f"{amount}%-"])
+        brightness = get_brightness()
+        send_brightness_notification(brightness)
+
+    threading.Thread(target=_do, daemon=True).start()

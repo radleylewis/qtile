@@ -1,6 +1,5 @@
 import subprocess
 import os
-import re
 from datetime import datetime
 from typing import Optional
 
@@ -26,16 +25,17 @@ def notify(
     app_name: Optional[str] = "",
     expire_time: int = 1_200,
     urgency: str = "normal",
+    tag: Optional[str] = None,
 ):
     cmd = ["notify-send"]
-    if replace_id:
-        cmd.append(f"--replace-id={replace_id}")
     if app_name:
         cmd.append(f"--app-name={app_name}")
-
     cmd.append(f"--urgency={urgency}")
     cmd.append(f"--expire-time={expire_time}")
-
+    if tag:
+        cmd += [f"--hint=string:x-canonical-private-synchronous:{tag}"]
+    elif replace_id:
+        cmd.append(f"--replace-id={replace_id}")
     subprocess.run(cmd + [title, message], check=False)
 
 
