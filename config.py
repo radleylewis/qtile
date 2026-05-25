@@ -1,15 +1,12 @@
 import os
 import subprocess
-
 from libqtile import hook, qtile
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
 from libqtile.layout.floating import Floating
 from libqtile.layout.max import Max
 from libqtile.layout.xmonad import MonadTall
 from libqtile.lazy import lazy
-
 from assets.constants import Colours, FONT_TYPE
-
 from utils.audio import (
     raise_volume,
     toggle_mute_audio_output,
@@ -17,16 +14,14 @@ from utils.audio import (
     toggle_mute_audio_input,
 )
 from utils.brightness import decrease_brightness, increase_brightness
-
 from top_bar import top_bar
 from scripts.utils import shift_group, take_screenshot
 
 terminal = "alacritty"
-
 meta = "mod4"
 alt = "mod1"
 
-XDG_CONFIG_DIR = os.environ.get("XDG_CONFIG_HOME", "~/.config")
+XDG_CONFIG_DIR = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
 
 
 @hook.subscribe.startup_once
@@ -38,7 +33,8 @@ def on_startup():
 # Bluetooth Manager
 @hook.subscribe.client_new
 def center_bluetuith(client):
-    if client.window.get_wm_class() and "bluetuith" in client.window.get_wm_class():
+    wm_class = client.window.get_wm_class()
+    if wm_class and any("bluetuith" in c for c in wm_class):
         screen = client.qtile.current_screen
         sw = screen.width
         sh = screen.height
@@ -55,6 +51,11 @@ keys = [
         "space",
         lazy.spawn('rofi -show combi -modes combi -combi-modes "window,drun"'),
         desc="Spawn rofi apps + open apps",
+    ),
+    Key(
+        [meta],
+        "c",
+        lazy.spawn("rofi -show calc -modi calc -no-show-match -no-sort"),
     ),
     Key([meta, "shift"], "f", lazy.spawn("rofi -show filebrowser -show-hidden")),
     Key([meta, "shift"], "r", lazy.spawn("rofi -show run")),
@@ -103,14 +104,6 @@ keys = [
         desc="rofi screen/mic recorder menu",
     ),
     Key([], "Print", lazy.function(take_screenshot)),
-    Key(
-        [meta],
-        "c",
-        lazy.spawn(
-            "ffplay -f v4l2 -input_format mjpeg -video_size 1920x1080 /dev/video1"
-        ),
-        desc="Run ffplay cropped GoPro feed",
-    ),
     Key([meta, alt], "Left", lazy.screen.prev_group(), desc="Move to previous group"),
     Key([meta, alt], "h", lazy.screen.prev_group(), desc="Move to previous group"),
     Key([meta, alt], "Right", lazy.screen.next_group(), desc="Move to next group"),
@@ -118,28 +111,28 @@ keys = [
     Key(
         [alt, "shift"],
         "h",
-        lazy.function(lambda qtile: shift_group(qtile, -1)),
+        lazy.function(lambda q: shift_group(q, -1)),
         lazy.screen.prev_group(),
         desc="Move window to previous group",
     ),
     Key(
         [alt, "shift"],
         "Left",
-        lazy.function(lambda qtile: shift_group(qtile, -1)),
+        lazy.function(lambda q: shift_group(q, -1)),
         lazy.screen.prev_group(),
         desc="Move window to previous group",
     ),
     Key(
         [alt, "shift"],
         "l",
-        lazy.function(lambda qtile: shift_group(qtile, 1)),
+        lazy.function(lambda q: shift_group(q, 1)),
         lazy.screen.next_group(),
         desc="Move window to next group",
     ),
     Key(
         [alt, "shift"],
         "Right",
-        lazy.function(lambda qtile: shift_group(qtile, 1)),
+        lazy.function(lambda q: shift_group(q, 1)),
         lazy.screen.next_group(),
         desc="Move window to next group",
     ),
@@ -158,8 +151,8 @@ keys = [
     ),
     Key([meta, "shift"], "j", lazy.layout.shuffle_down(), desc="Move window down"),
     Key([meta, "shift"], "k", lazy.layout.shuffle_up(), desc="Move window up"),
-    Key([meta], "m", lazy.layout.grow()),
-    Key([meta], "s", lazy.layout.shrink()),
+    Key([meta], "equal", lazy.layout.grow()),
+    Key([meta], "minus", lazy.layout.shrink()),
     Key([meta], "u", lazy.layout.reset()),
     Key([meta, "shift"], "n", lazy.layout.normalize()),
     Key([meta], "o", lazy.layout.maximize()),
@@ -182,7 +175,7 @@ keys = [
     Key(
         [meta, "shift"],
         "Tab",
-        lazy.group.next_window(),
+        lazy.group.prev_window(),
         desc="Cycle backwards through windows",
     ),
     Key([meta, "control"], "r", lazy.reload_config(), desc="Reload the config"),
@@ -207,7 +200,6 @@ for g in groups:  # exclude laptop group
             Key([meta, "shift"], g.name, lazy.window.togroup(g.name)),
         ]
     )
-
 
 # Add key bindings to switch VTs in Wayland.
 # We can't check qtile.core.name in default config as it is loaded before qtile is started
@@ -264,7 +256,7 @@ screens = make_screens()
 # This hook ensures screens are reconfigured when monitors change
 @hook.subscribe.screen_change
 def on_screen_change(_event):
-    subprocess.run(["qtile", "cmd-obj", "-o", "cmd", "-f", "restart"])
+    lazy.restart()
 
 
 # Drag floating layouts.
@@ -312,7 +304,13 @@ reconfigure_screens = True
 auto_minimize = True
 
 # When using the Wayland backend, this can be used to configure input devices.
-wl_input_rules = None
+wl_input_rules = {
+    "type:touchpad": {
+        "tap": True,
+        "natural_scroll": True,
+        "dwt": True,  # disable while typing
+    },
+}
 
 # xcursor theme (string or None) and size (integer) for Wayland backend
 wl_xcursor_theme = None
