@@ -1,6 +1,58 @@
-# Qtile Keybindings
+# Qtile Configuration
 
-## Rofi / Launchers
+A Qtile Wayland desktop configuration for Artix Linux with OpenRC.
+
+*Author: Radley E. Sidwell-Lewis*
+
+## Dependencies
+
+**Window manager and Wayland:**
+
+```bash
+sudo pacman -S qtile python-pywlroots python-pywayland python-xkbcommon xorg-xwayland
+```
+
+**Launcher and utilities:**
+
+```bash
+sudo pacman -S rofi rofi-calc mako brightnessctl playerctl grim slurp wl-clipboard
+```
+
+**Audio:**
+
+```bash
+sudo pacman -S pipewire pipewire-pulse wireplumber
+```
+
+**Display and idle:**
+
+```bash
+sudo pacman -S kanshi swayidle swaylock swaybg
+```
+
+**Bluetooth:**
+
+```bash
+paru -S bluetuith
+```
+
+**Fonts:**
+
+```bash
+sudo pacman -S ttf-firacode-nerd
+```
+
+**Python dependencies:**
+
+```bash
+sudo pacman -S python-psutil
+```
+
+---
+
+## Keybindings
+
+### Rofi / Launchers
 
 | Shortcut | Action |
 |----------|--------|
@@ -17,7 +69,7 @@
 | `Super + b` | Bluetooth manager |
 | `Super + r` | Screen / mic recorder |
 
-## Applications
+### Applications
 
 | Shortcut | Action |
 |----------|--------|
@@ -25,7 +77,7 @@
 | `Print` | Screenshot |
 | `XF86Favorites` | Brave browser |
 
-## Navigation
+### Navigation
 
 | Shortcut | Action |
 |----------|--------|
@@ -33,10 +85,10 @@
 | `Super + l` | Focus right |
 | `Super + j` | Focus down |
 | `Super + k` | Focus up |
-| `Super + Tab` | Cycle windows |
-| `Super + Shift + Tab` | Cycle windows (reverse) |
+| `Super + Tab` | Cycle windows forward |
+| `Super + Shift + Tab` | Cycle windows backward |
 
-## Window Management
+### Window Management
 
 | Shortcut | Action |
 |----------|--------|
@@ -54,7 +106,7 @@
 | `Super + z` | Toggle fullscreen |
 | `Super + d` | Toggle layout |
 
-## Groups / Workspaces
+### Groups / Workspaces
 
 | Shortcut | Action |
 |----------|--------|
@@ -65,7 +117,7 @@
 | `Alt + Shift + Left / h` | Move window to previous group |
 | `Alt + Shift + Right / l` | Move window to next group |
 
-## Media Keys
+### Media Keys
 
 | Shortcut | Action |
 |----------|--------|
@@ -78,14 +130,14 @@
 | `XF86Go` | Unblock Bluetooth |
 | `Cancel` | Block Bluetooth |
 
-## System
+### System
 
 | Shortcut | Action |
 |----------|--------|
 | `Super + Ctrl + r` | Reload config |
 | `Ctrl + Alt + F1-F7` | Switch VT |
 
-## Mouse
+### Mouse
 
 | Shortcut | Action |
 |----------|--------|
