@@ -35,4 +35,3 @@ swayidle -w \
 	resume "[ -f $BRIGHTNESS_FILE ] && brightnessctl set \$(cat $BRIGHTNESS_FILE)" \
 	timeout $lock_timeout "$HOME/.config/qtile/scripts/sleep.sh" \
 	resume "[ -f $BRIGHTNESS_FILE ] && brightnessctl set \$(cat $BRIGHTNESS_FILE)" &
-resume "[ -f $BRIGHTNESS_FILE ] && brightnessctl set $(cat $BRIGHTNESS_FILE)" &
