@@ -22,7 +22,7 @@ class ColourEnum:
 class Colours(ColourEnum):
     GREY = "#696969"
     GOLD = "#e2c779"
-    HIGHLIGHT = "#ff6b8a"
+    HIGHLIGHT = "#00BFFF"
     BRIGHT_GREEN = "#7ee787"
     BACKGROUND = "#1b1e37"
     BACKGROUND_LIGHT = "#f48077"
