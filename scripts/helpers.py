@@ -3,19 +3,15 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from libqtile.lazy import lazy
-
 
 def shift_group(qtile, direction):
     groups = qtile.groups
     current_group = qtile.current_group
+    if qtile.current_window is None:
+        return
     idx = [group.name for group in groups].index(current_group.name)
     new_idx = (idx + direction) % len(groups)
     qtile.current_window.togroup(groups[new_idx].name)
-    if direction == 1:
-        lazy.screen.next_group()
-    else:
-        lazy.screen.prev_group()
 
 
 def notify(
@@ -23,7 +19,7 @@ def notify(
     message: str,
     replace_id: Optional[int] = None,
     app_name: Optional[str] = "",
-    expire_time: int = 1_200,
+    expire_time: Optional[int] = 1_200,
     urgency: str = "normal",
     tag: Optional[str] = None,
 ):
@@ -31,7 +27,8 @@ def notify(
     if app_name:
         cmd.append(f"--app-name={app_name}")
     cmd.append(f"--urgency={urgency}")
-    cmd.append(f"--expire-time={expire_time}")
+    if expire_time is not None:
+        cmd.append(f"--expire-time={expire_time}")
     if tag:
         cmd += [f"--hint=string:x-canonical-private-synchronous:{tag}"]
     elif replace_id:
@@ -49,6 +46,9 @@ def take_screenshot(_qtile):
     os.makedirs(IMAGE_DIR, exist_ok=True)
     out = timestamp_file("screenshot", "png", IMAGE_DIR)
 
-    subprocess.Popen(["grim", out])
+    # Save to file and copy to the clipboard
+    subprocess.Popen(
+        ["sh", "-c", 'grim "$1" && wl-copy --type image/png < "$1"', "sh", out]
+    )
 
-    notify("Screenshot Taken", out)
+    notify("Screenshot Taken", f"{out}\nCopied to clipboard")

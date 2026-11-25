@@ -3,7 +3,8 @@ import threading
 
 from libqtile.lazy import lazy
 
-from scripts.utils import notify
+from assets.constants import Colours
+from scripts.helpers import notify
 
 
 def get_brightness():
@@ -25,14 +26,24 @@ def get_brightness():
 def send_brightness_notification(brightness):
     """Show brightness notification via mako/notify-send."""
     icon = "󰖔" if brightness < 50 else "󰖙"
+    purple, grey = Colours.PURPLE, Colours.GREY
 
     bar_len = 35
     filled = int((brightness / 100) * bar_len)
-    bar = "█" * filled + "░" * (bar_len - filled)
+    bar = (
+        f'<span color="{purple}">' + "█" * filled + "</span>"
+        f'<span color="{grey}">' + "░" * (bar_len - filled) + "</span>"
+    )
 
     title = "Screen Brightness"
-    message = f"{icon} Brightness: {brightness}%\n{bar}"
-    notify(title, message, app_name="brightness-control", tag="brightness")
+    message = f'<span color="{purple}"><b>{icon} Brightness: {brightness}%</b></span>\n{bar}'
+    notify(
+        title,
+        message,
+        app_name="brightness-control",
+        tag="brightness",
+        expire_time=None,  # mako's default, like volume
+    )
 
 
 @lazy.function
