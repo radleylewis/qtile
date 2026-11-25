@@ -73,7 +73,7 @@ keys = [
         [meta],
         "space",
         lazy.spawn('rofi -show combi -modes combi -combi-modes "window,drun"'),
-        desc="Spawn rofi apps + open apps",
+        desc="App launcher (apps + open windows)",
     ),
     Key(
         [meta],
@@ -88,7 +88,7 @@ keys = [
         desc="File browser",
     ),
     Key([meta, "shift"], "r", lazy.spawn("rofi -show run"), desc="Run command"),
-    Key([meta], "w", lazy.spawn("rofi -show window"), desc="Spawn rofi"),
+    Key([meta], "w", lazy.spawn("rofi -show window"), desc="Window switcher"),
     Key(
         [meta],
         "v",
@@ -119,7 +119,7 @@ keys = [
         [meta],
         "Escape",
         lazy.spawn(f"{XDG_CONFIG_DIR}/rofi/scripts/power-manager"),
-        desc="rofi power menu",
+        desc="Power menu",
     ),
     Key(
         [meta],
@@ -127,7 +127,7 @@ keys = [
         lazy.spawn(
             f"rofi -show performance-profile -theme {XDG_CONFIG_DIR}/rofi/performance-profile.rasi"
         ),
-        desc="rofi performance profile menu",
+        desc="Performance profile menu",
     ),
     Key(
         [meta],
@@ -135,7 +135,7 @@ keys = [
         lazy.spawn(
             f"rofi -show audio-output -theme {XDG_CONFIG_DIR}/rofi/microphone.rasi"
         ),
-        desc="rofi audio output menu",
+        desc="Audio output menu",
     ),
     Key(
         [meta],
@@ -143,13 +143,13 @@ keys = [
         lazy.spawn(
             f"rofi -show microphone -theme {XDG_CONFIG_DIR}/rofi/microphone.rasi"
         ),
-        desc="rofi audio input menu",
+        desc="Audio input menu",
     ),
     Key(
         [meta],
         "n",
         lazy.spawn(f"{XDG_CONFIG_DIR}/rofi/scripts/wifi-manager"),
-        desc="rofi WiFi menu",
+        desc="WiFi menu",
     ),
     Key(
         [meta],
@@ -161,7 +161,7 @@ keys = [
         [meta],
         "r",
         lazy.spawn(f"rofi -show av-recorder -theme {XDG_CONFIG_DIR}/rofi/common.rasi"),
-        desc="rofi screen/mic recorder menu",
+        desc="Screen/mic recorder menu",
     ),
     Key([], "Print", lazy.function(take_screenshot), desc="Screenshot"),
     Key([meta, alt], "Left", lazy.screen.prev_group(), desc="Move to previous group"),
@@ -169,28 +169,28 @@ keys = [
     Key([meta, alt], "Right", lazy.screen.next_group(), desc="Move to next group"),
     Key([meta, alt], "l", lazy.screen.next_group(), desc="Move to next group"),
     Key(
-        [alt, "shift"],
+        [meta, alt, "shift"],
         "h",
         lazy.function(lambda q: shift_group(q, -1)),
         lazy.screen.prev_group(),
         desc="Move window to previous group",
     ),
     Key(
-        [alt, "shift"],
+        [meta, alt, "shift"],
         "Left",
         lazy.function(lambda q: shift_group(q, -1)),
         lazy.screen.prev_group(),
         desc="Move window to previous group",
     ),
     Key(
-        [alt, "shift"],
+        [meta, alt, "shift"],
         "l",
         lazy.function(lambda q: shift_group(q, 1)),
         lazy.screen.next_group(),
         desc="Move window to next group",
     ),
     Key(
-        [alt, "shift"],
+        [meta, alt, "shift"],
         "Right",
         lazy.function(lambda q: shift_group(q, 1)),
         lazy.screen.next_group(),

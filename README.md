@@ -158,8 +158,8 @@ A cheatsheet can be generated from `config.py` with `python scripts/cheatsheet.p
 | `Super + Shift + 1-5` | Move window to group |
 | `Super + Alt + Left / h` | Previous group |
 | `Super + Alt + Right / l` | Next group |
-| `Alt + Shift + Left / h` | Move window to previous group |
-| `Alt + Shift + Right / l` | Move window to next group |
+| `Super + Alt + Shift + Left / h` | Move window to previous group |
+| `Super + Alt + Shift + Right / l` | Move window to next group |
 
 ### Media Keys
 
