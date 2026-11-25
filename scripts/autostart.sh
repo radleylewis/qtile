@@ -15,9 +15,9 @@ sleep 1
 pipewire-pulse &
 wireplumber &
 
-# Start auto-cpufreq
-if ! pgrep -x auto-cpufreq >/dev/null; then
-	auto-cpufreq --daemon &
+# clipboard history (Super + v)
+if command -v cliphist >/dev/null; then
+	wl-paste --watch cliphist store &
 fi
 
 # gestures

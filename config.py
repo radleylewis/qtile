@@ -14,8 +14,8 @@ from utils.audio import (
     toggle_mute_audio_input,
 )
 from utils.brightness import decrease_brightness, increase_brightness
-from top_bar import top_bar
-from scripts.utils import shift_group, take_screenshot
+from top_bar import make_top_bar
+from scripts.helpers import shift_group, take_screenshot
 
 terminal = "alacritty"
 meta = "mod4"
@@ -30,10 +30,32 @@ def on_startup():
     subprocess.Popen([autostart])
 
 
+# qtile draws its bars above the session-lock surface, so hide them while locked.
+# Only hide/unhide the bar's window: Bar.show() re-lays out the group, which refocuses
+# the app window and steals keyboard input from the lock screen (can't unlock).
+def _show_bars(show):
+    for screen in qtile.screens:
+        if screen.top and screen.top.window:
+            if show:
+                screen.top.window.unhide()
+            else:
+                screen.top.window.hide()
+
+
+@hook.subscribe.locked
+def hide_bars_when_locked():
+    _show_bars(False)
+
+
+@hook.subscribe.unlocked
+def show_bars_when_unlocked():
+    _show_bars(True)
+
+
 # Bluetooth Manager
 @hook.subscribe.client_new
 def center_bluetuith(client):
-    wm_class = client.window.get_wm_class()
+    wm_class = client.get_wm_class()
     if wm_class and any("bluetuith" in c for c in wm_class):
         screen = client.qtile.current_screen
         sw = screen.width
@@ -41,7 +63,8 @@ def center_bluetuith(client):
         w = 800
         h = 400
         client.set_size_floating(w, h)
-        client.set_position_floating((sw - w) // 2, (sh - h) // 2)
+        # positions are absolute, so offset by the screen's origin
+        client.set_position_floating(screen.x + (sw - w) // 2, screen.y + (sh - h) // 2)
 
 
 keys = [
@@ -56,10 +79,42 @@ keys = [
         [meta],
         "c",
         lazy.spawn("rofi -show calc -modi calc -no-show-match -no-sort"),
+        desc="Calculator",
     ),
-    Key([meta, "shift"], "f", lazy.spawn("rofi -show filebrowser -show-hidden")),
-    Key([meta, "shift"], "r", lazy.spawn("rofi -show run")),
+    Key(
+        [meta, "shift"],
+        "f",
+        lazy.spawn("rofi -show filebrowser -show-hidden"),
+        desc="File browser",
+    ),
+    Key([meta, "shift"], "r", lazy.spawn("rofi -show run"), desc="Run command"),
     Key([meta], "w", lazy.spawn("rofi -show window"), desc="Spawn rofi"),
+    Key(
+        [meta],
+        "v",
+        lazy.spawn(
+            "cliphist list | rofi -dmenu -i -p Clipboard -display-columns 2"
+            " | cliphist decode | wl-copy",
+            shell=True,
+        ),
+        desc="Clipboard history",
+    ),
+    Key(
+        [meta],
+        "period",
+        lazy.spawn("rofi -modi emoji -show emoji"),
+        desc="Emoji picker",
+    ),
+    Key(
+        [meta],
+        "slash",
+        lazy.spawn(
+            f"python3 {XDG_CONFIG_DIR}/qtile/scripts/cheatsheet.py --plain"
+            " | rofi -dmenu -i -p Keys -theme-str 'window {width: 900px;}'",
+            shell=True,
+        ),
+        desc="Keybinding cheatsheet",
+    ),
     Key(
         [meta],
         "Escape",
@@ -96,14 +151,19 @@ keys = [
         lazy.spawn(f"{XDG_CONFIG_DIR}/rofi/scripts/wifi-manager"),
         desc="rofi WiFi menu",
     ),
-    Key([meta], "b", lazy.spawn(f"{terminal} --class bluetuith -e bluetuith")),
+    Key(
+        [meta],
+        "b",
+        lazy.spawn(f"{terminal} --class bluetuith -e bluetuith"),
+        desc="Bluetooth manager",
+    ),
     Key(
         [meta],
         "r",
         lazy.spawn(f"rofi -show av-recorder -theme {XDG_CONFIG_DIR}/rofi/common.rasi"),
         desc="rofi screen/mic recorder menu",
     ),
-    Key([], "Print", lazy.function(take_screenshot)),
+    Key([], "Print", lazy.function(take_screenshot), desc="Screenshot"),
     Key([meta, alt], "Left", lazy.screen.prev_group(), desc="Move to previous group"),
     Key([meta, alt], "h", lazy.screen.prev_group(), desc="Move to previous group"),
     Key([meta, alt], "Right", lazy.screen.next_group(), desc="Move to next group"),
@@ -151,11 +211,11 @@ keys = [
     ),
     Key([meta, "shift"], "j", lazy.layout.shuffle_down(), desc="Move window down"),
     Key([meta, "shift"], "k", lazy.layout.shuffle_up(), desc="Move window up"),
-    Key([meta], "equal", lazy.layout.grow()),
-    Key([meta], "minus", lazy.layout.shrink()),
-    Key([meta], "u", lazy.layout.reset()),
-    Key([meta, "shift"], "n", lazy.layout.normalize()),
-    Key([meta], "o", lazy.layout.maximize()),
+    Key([meta], "equal", lazy.layout.grow(), desc="Grow window"),
+    Key([meta], "minus", lazy.layout.shrink(), desc="Shrink window"),
+    Key([meta], "u", lazy.layout.reset(), desc="Reset window size"),
+    Key([meta, "shift"], "n", lazy.layout.normalize(), desc="Normalise layout"),
+    Key([meta], "o", lazy.layout.maximize(), desc="Maximise window"),
     Key([meta], "Return", lazy.spawn(terminal), desc="Launch terminal"),
     Key([meta], "d", lazy.next_layout(), desc="Toggle between layouts"),
     Key([meta], "q", lazy.window.kill(), desc="Kill focused window"),
@@ -180,15 +240,19 @@ keys = [
     ),
     Key([meta, "control"], "r", lazy.reload_config(), desc="Reload the config"),
     # Key([], "XF86Keyboard", cycle_keyboard_layout),
-    Key([], "XF86Favorites", lazy.spawn("brave")),
-    Key([], "XF86Go", lazy.spawn("rfkill unblock bluetooth")),
-    Key([], "Cancel", lazy.spawn("rfkill block bluetooth")),
-    Key([], "XF86AudioRaiseVolume", raise_volume),
-    Key([], "XF86AudioMute", toggle_mute_audio_output),
-    Key([], "XF86AudioLowerVolume", lower_volume),
-    Key([], "XF86MonBrightnessDown", decrease_brightness),
-    Key([], "XF86MonBrightnessUp", increase_brightness),
-    Key([], "XF86AudioMicMute", toggle_mute_audio_input),
+    Key([], "XF86Favorites", lazy.spawn("brave"), desc="Brave browser"),
+    Key([], "XF86Go", lazy.spawn("rfkill unblock bluetooth"), desc="Unblock Bluetooth"),
+    Key([], "Cancel", lazy.spawn("rfkill block bluetooth"), desc="Block Bluetooth"),
+    Key([], "XF86AudioRaiseVolume", raise_volume, desc="Volume up"),
+    Key([], "XF86AudioMute", toggle_mute_audio_output, desc="Toggle mute"),
+    Key([], "XF86AudioLowerVolume", lower_volume, desc="Volume down"),
+    Key([], "XF86MonBrightnessDown", decrease_brightness, desc="Brightness down"),
+    Key([], "XF86MonBrightnessUp", increase_brightness, desc="Brightness up"),
+    Key([], "XF86AudioMicMute", toggle_mute_audio_input, desc="Toggle mic mute"),
+    # notifications (mako)
+    Key([meta], "x", lazy.spawn("makoctl dismiss"), desc="Dismiss notification"),
+    Key([meta, "shift"], "x", lazy.spawn("makoctl dismiss -a"), desc="Dismiss all notifications"),
+    Key([meta], "grave", lazy.spawn("makoctl restore"), desc="Restore last dismissed notification"),
 ]
 
 groups = [Group(str(i)) for i in range(1, 6)]  # main screen groups
@@ -196,8 +260,13 @@ groups = [Group(str(i)) for i in range(1, 6)]  # main screen groups
 for g in groups:  # exclude laptop group
     keys.extend(
         [
-            Key([meta], g.name, lazy.group[g.name].toscreen()),
-            Key([meta, "shift"], g.name, lazy.window.togroup(g.name)),
+            Key([meta], g.name, lazy.group[g.name].toscreen(), desc=f"Switch to group {g.name}"),
+            Key(
+                [meta, "shift"],
+                g.name,
+                lazy.window.togroup(g.name),
+                desc=f"Move window to group {g.name}",
+            ),
         ]
     )
 
@@ -246,17 +315,21 @@ widget_defaults = dict(
 extension_defaults = widget_defaults.copy()
 
 
-def make_screens():
-    return [Screen(top=top_bar)]
+# Build one Screen (with its own bar) per connected output; qtile calls this
+# again whenever outputs change (reconfigure_screens, below; layout via kanshi).
+#
+# Reuse the bar of a monitor that's still connected: qtile keeps that monitor's old
+# Screen (matched by output) and never finalizes its bar, so a fresh bar would leave
+# the old one drawn on top. Workaround for qtile 0.37.1: fixed upstream by
+# https://github.com/qtile/qtile/pull/6055 — remove this once qtile includes it.
+def generate_screens(outputs):
+    def bar_for(output):
+        for screen in qtile.screens:
+            if getattr(screen, "output", None) == output and screen.top:
+                return screen.top
+        return make_top_bar()
 
-
-screens = make_screens()
-
-
-# This hook ensures screens are reconfigured when monitors change
-@hook.subscribe.screen_change
-def on_screen_change(_event):
-    lazy.restart()
+    return [Screen(top=bar_for(output)) for output in outputs]
 
 
 # Drag floating layouts.

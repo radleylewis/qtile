@@ -9,13 +9,13 @@ A Qtile Wayland desktop configuration for Artix Linux with OpenRC.
 **Window manager and Wayland:**
 
 ```bash
-sudo pacman -S qtile python-pywlroots python-pywayland python-xkbcommon xorg-xwayland
+sudo pacman -S qtile xorg-xwayland
 ```
 
 **Launcher and utilities:**
 
 ```bash
-sudo pacman -S rofi rofi-calc mako brightnessctl playerctl grim slurp wl-clipboard
+sudo pacman -S rofi rofi-calc rofi-emoji cliphist wtype mako brightnessctl playerctl grim slurp wl-clipboard
 ```
 
 **Audio:**
@@ -39,7 +39,7 @@ paru -S bluetuith
 **Fonts:**
 
 ```bash
-sudo pacman -S ttf-firacode-nerd
+sudo pacman -S ttf-jetbrains-mono-nerd
 ```
 
 **Python dependencies:**
@@ -50,7 +50,48 @@ sudo pacman -S python-psutil
 
 ---
 
+## System setup (outside this repo)
+
+**Suspend must use s2idle.** `scripts/sleep.sh` suspends via `loginctl suspend`, but
+S3 ("deep") resume is broken on the ThinkPad T480 with Libreboot 26.01 (black or frozen
+screen; fixed in Libreboot 26.11). Make elogind use s2idle instead:
+
+```bash
+printf '[Sleep]\nSuspendState=freeze\n' | sudo tee /etc/elogind/sleep.conf.d/20-s2idle.conf
+```
+
+Without this file, idle suspend falls back to S3 and the laptop won't wake properly.
+
+**USB-C / Thunderbolt (T480):** the Thunderbolt controller isn't working, so a USB-C
+monitor gives a picture but its USB ports don't reach the laptop. Plug keyboards etc.
+into the laptop directly. (Fix: reflash the Thunderbolt chip, see Libreboot's
+`t480_thunderbolt_fix` docs.)
+
+---
+
+## Checking changes
+
+After editing, validate the config before reloading (`Super + Ctrl + r`):
+
+```bash
+sh ~/.config/qtile/scripts/check.sh
+```
+
+This runs `qtile check`, a Python syntax check, a full import of the config (via the
+cheatsheet) and `sh -n` on the shell scripts. It catches "config won't load" mistakes,
+but not runtime behaviour: locking, suspend and monitor hotplug still need a real test.
+
+Runtime errors (e.g. a crashing hook) only show up in the log:
+
+```bash
+grep -A8 ERROR ~/.local/share/qtile/qtile.log | tail -40
+```
+
+---
+
 ## Keybindings
+
+A cheatsheet can be generated from `config.py` with `python scripts/cheatsheet.py`.
 
 ### Rofi / Launchers
 
@@ -68,13 +109,16 @@ sudo pacman -S python-psutil
 | `Super + n` | WiFi manager |
 | `Super + b` | Bluetooth manager |
 | `Super + r` | Screen / mic recorder |
+| `Super + v` | Clipboard history |
+| `Super + .` | Emoji picker |
+| `Super + /` | Keybinding cheatsheet |
 
 ### Applications
 
 | Shortcut | Action |
 |----------|--------|
 | `Super + Return` | Terminal (alacritty) |
-| `Print` | Screenshot |
+| `Print` | Screenshot (saved and copied to clipboard) |
 | `XF86Favorites` | Brave browser |
 
 ### Navigation

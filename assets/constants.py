@@ -1,25 +1,12 @@
-from typing import Dict
+import os
 
 FONT_TYPE = "JetBrains Mono Bold"
 
-
-class ColourEnum:
-    _colours: Dict[str, str] = {}
-
-    def __init_subclass__(cls):
-        for name, hex_value in cls.__annotations__.items():
-            if isinstance(hex_value, str) and hex_value.startswith("#"):
-                cls._colours[name] = hex_value
-
-    def __getattr__(self, name: str) -> str:
-        if name in self._colours:
-            return self._colours[name]
-        raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        )
+# Resolved from this file, so it works wherever the config lives.
+GRAPHICS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "graphics")
 
 
-class Colours(ColourEnum):
+class Colours:
     GREY = "#696969"
     GOLD = "#e2c779"
     HIGHLIGHT = "#00BFFF"
@@ -30,3 +17,4 @@ class Colours(ColourEnum):
     WHITE = "#e1e1e2"
     BLACK = "#000000"
     WARNING = "#f6719b"
+    PURPLE = "#c792ea"
