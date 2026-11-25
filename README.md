@@ -52,6 +52,14 @@ sudo pacman -S python-psutil
 
 ## System setup (outside this repo)
 
+On a fresh install, `scripts/bootstrap.sh` does all of this (packages, the files below,
+services, GTK theme). Run it without arguments for a dry run, then with `--apply`:
+
+```bash
+sh ~/.config/qtile/scripts/bootstrap.sh          # show what it would do
+sh ~/.config/qtile/scripts/bootstrap.sh --apply  # do it
+```
+
 **Suspend must use s2idle.** `scripts/sleep.sh` suspends via `loginctl suspend`, but
 S3 ("deep") resume is broken on the ThinkPad T480 with Libreboot 26.01 (black or frozen
 screen; fixed in Libreboot 26.11). Make elogind use s2idle instead:
@@ -61,6 +69,11 @@ printf '[Sleep]\nSuspendState=freeze\n' | sudo tee /etc/elogind/sleep.conf.d/20-
 ```
 
 Without this file, idle suspend falls back to S3 and the laptop won't wake properly.
+
+**Log in with "Qtile (Wayland, D-Bus)".** `/usr/share/wayland-sessions/qtile-dbus.desktop` runs
+`dbus-run-session qtile start -b wayland`, giving qtile and everything it starts one
+session bus. The stock "Qtile" session has none, so notifications, media keys etc. only
+work by luck (via X11 autolaunch) and break for anything started outside it.
 
 **USB-C / Thunderbolt (T480):** the Thunderbolt controller isn't working, so a USB-C
 monitor gives a picture but its USB ports don't reach the laptop. Plug keyboards etc.
@@ -169,6 +182,9 @@ A cheatsheet can be generated from `config.py` with `python scripts/cheatsheet.p
 | `XF86AudioLowerVolume` | Volume down |
 | `XF86AudioMute` | Toggle mute |
 | `XF86AudioMicMute` | Toggle mic mute |
+| `XF86AudioPlay` / `XF86AudioPause` | Play/pause media (playerctl) |
+| `XF86AudioNext` / `XF86AudioPrev` | Next / previous track |
+| `XF86AudioStop` | Stop media |
 | `XF86MonBrightnessUp` | Brightness up |
 | `XF86MonBrightnessDown` | Brightness down |
 | `XF86Go` | Unblock Bluetooth |

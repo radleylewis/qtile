@@ -23,6 +23,9 @@ fi
 # gestures
 libinput-gestures-setup start
 
+# night light (times/temperatures in ~/.config/gammastep/config.ini)
+gammastep &
+
 # desktop backend
 xdg-desktop-portal-wlr &
 sleep 1

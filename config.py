@@ -249,6 +249,12 @@ keys = [
     Key([], "XF86MonBrightnessDown", decrease_brightness, desc="Brightness down"),
     Key([], "XF86MonBrightnessUp", increase_brightness, desc="Brightness up"),
     Key([], "XF86AudioMicMute", toggle_mute_audio_input, desc="Toggle mic mute"),
+    # media players (any MPRIS player: browsers, spotify, mpv, ...)
+    Key([], "XF86AudioPlay", lazy.spawn("playerctl play-pause"), desc="Play/pause media"),
+    Key([], "XF86AudioPause", lazy.spawn("playerctl play-pause"), desc="Play/pause media"),
+    Key([], "XF86AudioNext", lazy.spawn("playerctl next"), desc="Next track"),
+    Key([], "XF86AudioPrev", lazy.spawn("playerctl previous"), desc="Previous track"),
+    Key([], "XF86AudioStop", lazy.spawn("playerctl stop"), desc="Stop media"),
     # notifications (mako)
     Key([meta], "x", lazy.spawn("makoctl dismiss"), desc="Dismiss notification"),
     Key([meta, "shift"], "x", lazy.spawn("makoctl dismiss -a"), desc="Dismiss all notifications"),
@@ -390,7 +396,7 @@ wl_input_rules = {
 }
 
 # xcursor theme (string or None) and size (integer) for Wayland backend
-wl_xcursor_theme = None
+wl_xcursor_theme = "Adwaita"  # same as GTK (gsettings cursor-theme)
 wl_xcursor_size = 24
 
 # XXX: Gasp! We're lying here. In fact, nobody really uses or cares about this
