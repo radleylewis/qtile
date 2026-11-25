@@ -344,6 +344,10 @@ mouse = [
         [meta], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()
     ),
     Click([meta], "Button2", lazy.window.bring_to_front()),
+    # Mouse side buttons (Button8 = back, Button9 = forward) switch workspace.
+    # Unmodified, so apps (e.g. browsers) no longer receive back/forward clicks.
+    Click([], "Button8", lazy.screen.prev_group()),
+    Click([], "Button9", lazy.screen.next_group()),
 ]
 
 dgroups_key_binder = None

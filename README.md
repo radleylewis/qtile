@@ -188,3 +188,5 @@ A cheatsheet can be generated from `config.py` with `python scripts/cheatsheet.p
 | `Super + Left click drag` | Move floating window |
 | `Super + Right click drag` | Resize floating window |
 | `Super + Middle click` | Bring window to front |
+| `Back side button` | Previous group |
+| `Forward side button` | Next group (side buttons no longer reach apps) |
