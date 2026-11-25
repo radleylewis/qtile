@@ -1,5 +1,18 @@
 #!/bin/sh
 
+# Send this script's and its daemons' output to a log (fresh each login) instead of
+# the terminal, where it would be printed over the login screen.
+LOG="${XDG_STATE_HOME:-$HOME/.local/state}/qtile-autostart.log"
+mkdir -p "$(dirname "$LOG")"
+exec >"$LOG" 2>&1
+
+# Desktop name for xdg-desktop-portal: "wlroots" makes it use the wlr backend for
+# screen sharing/screenshots (see ~/.config/xdg-desktop-portal/portals.conf).
+export XDG_CURRENT_DESKTOP=qtile:wlroots
+# Services that D-Bus starts on demand (portals, ...) only see the bus's environment,
+# which was created before qtile set the display variables: pass them on.
+dbus-update-activation-environment DISPLAY WAYLAND_DISPLAY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP
+
 # screens: managed by kanshi
 kanshi &
 
@@ -26,10 +39,10 @@ libinput-gestures-setup start
 # night light (times/temperatures in ~/.config/gammastep/config.ini)
 gammastep &
 
-# desktop backend
-xdg-desktop-portal-wlr &
+# desktop portals (screen sharing, file dialogs): they live in /usr/lib, not on PATH
+/usr/lib/xdg-desktop-portal-wlr &
 sleep 1
-xdg-desktop-portal &
+/usr/lib/xdg-desktop-portal &
 
 # idle/lock
 dim_timeout=120  # 2 minutes to dim

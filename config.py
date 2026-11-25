@@ -1,4 +1,5 @@
 import os
+import signal
 import subprocess
 from libqtile import hook, qtile
 from libqtile.config import Click, Drag, Group, Key, Match, Screen
@@ -24,10 +25,29 @@ alt = "mod1"
 XDG_CONFIG_DIR = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
 
 
+# autostart.sh runs in its own process group, so its daemons (pipewire, gammastep,
+# swayidle, ...) can be stopped with qtile instead of outliving the session and
+# printing errors over the login screen. The group id is kept in the environment
+# because this module is re-executed on config reload, the qtile process is not.
+AUTOSTART_PGID = "QTILE_AUTOSTART_PGID"
+
+
 @hook.subscribe.startup_once
 def on_startup():
     autostart = os.path.expanduser(f"{XDG_CONFIG_DIR}/qtile/scripts/autostart.sh")
-    subprocess.Popen([autostart])
+    proc = subprocess.Popen([autostart], start_new_session=True)
+    os.environ[AUTOSTART_PGID] = str(proc.pid)
+
+
+@hook.subscribe.shutdown
+def stop_autostart():
+    pgid = int(os.environ.get(AUTOSTART_PGID, "0"))
+    # never signal qtile's own group (that's also the login manager's)
+    if pgid > 1 and pgid != os.getpgrp():
+        try:
+            os.killpg(pgid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass  # everything already exited
 
 
 # qtile draws its bars above the session-lock surface, so hide them while locked.
